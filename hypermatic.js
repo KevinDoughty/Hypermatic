@@ -20,19 +20,23 @@
 	}
 	
 	function isNumber(w) {
-		return !isNaN(parseFloat(w)) && isFinite(w); //jQuery.isNumeric(w);
+		return jQuery.isNumeric(w); // !isNaN(parseFloat(w)) && isFinite(w);
 	}
 	
 	function isArray(w) {
-		return Object.prototype.toString.call(w) === '[object Array]'; //jQuery.isArray(w);
+		return jQuery.isArray(w); // Object.prototype.toString.call(w) === '[object Array]';
 	}
 	
 	function isString(w) {
-		return (typeof w == 'string' || w instanceof String); //jQuery.type(w) === 'string';
+		return jQuery.type(w) === 'string'; // (typeof w == 'string' || w instanceof String);
 	}
 	
 	function isElement(w) {
 		return (w instanceof HTMLElement);
+	}
+	
+	function isFunction(w) {
+		return jQuery.isFunction(w); // w && {}.toString.call(w) === '[object Function]'; // underscore
 	}
 	
 	function copyingSelectionArray(selection) {
@@ -91,30 +95,6 @@
 		}
 	}
 	
-	function underlyingKeyframes(dict) {
-		var frames = [], array = dict.values, type = dict.type, unit = dict.unit, steps = dict.steps, callback = dict.progress;
-		if (array && !isArray(array)) array = dict.values.call(this);
-		if (array && isArray(array) && array.length) {
-			if (!unit) unit = "";
-			var isScale = (type.substr(0,5) == 'scale');
-			var isTransform = (isScale || type.substr(0,6) == 'rotate' || type.substr(0,9) == 'translate' ||  type.substr(0,6) == 'matrix');
-			var name = (isTransform) ? 'transform' : type;
-			var divider = (isTransform) ? ", " : " ";
-			for (var i=0;i<2;i++) {
-				frames[i] = {'offset':i};
-				frames[i][name] = (isTransform) ? type+'(' : '';
-				for (var j = 0; j<array.length; j++) {
-					if (j > 0) frames[i][name] += divider;
-					var converted = scientificToDecimal(array[j])
-					if (isNumber(converted)) frames[i][name] += converted+unit;
-					else frames[i][name] += array[j]+unit;
-				}
-				if (isTransform) frames[i][name] += ')';
-			}
-		}
-		return frames;
-	}
-	
 	function underlyingAssign(element,type,newAnim) {
  		if (newAnim === null) {
  			var count = $(element).data("hypermaticUnderlyingCount");
@@ -150,60 +130,14 @@
 		}
  	}
  	
-	function negativeDeltaTiming(dict) {
- 		var duration = dict.duration;
- 		var easing = perfect;
- 		if (dict.easing && typeof dict.easing != 'string') easing = 'linear';
- 		else if (dict.easing) easing = dict.easing;
- 		var delay = (dict.delay) ? dict.delay : 0;
- 		if (dict.key) delay += document.timeline.currentTime;	
-		return {duration:duration, easing:easing, fill:'backwards', delay:delay};
-	}
-	
-	function negativeDeltaKeyframes(dict,values) {
-		if (!values) values = dict.values;
-		var frames = [], type = dict.type, unit = dict.unit, steps = dict.steps;
-		var callback = null;
-		if (dict.easing && typeof dict.easing != 'string') callback = dict.easing;
-		if (isArray(values) && values.length > 1) {
-			if (!unit) unit = "";
-			var isScale = (type.substr(0,5) == 'scale');
-			var isTransform = (isScale || type.substr(0,6) == 'rotate' || type.substr(0,9) == 'translate' ||  type.substr(0,6) == 'matrix');
-			var name = (isTransform) ? 'transform' : type;
-			var divider = (isTransform) ? ", " : " ";
-			if (steps === null || steps === undefined) steps = defaultSteps;
-			if (!callback || steps < 3) steps = 2;
-			for (var i=0;i<steps;i++) {
-				var offset = scientificToDecimal( (1.0/(steps-1))*i ) * 1.0; // offset from 0 to 1 inclusive
-				var progress = 1.0 - offset;
-				if (callback && i < steps) progress = 1 - callback.call(null,offset); // should I enforce 0 and 1 for first and last?
-				frames[i] = {'offset':offset};
-				frames[i][name] = (isTransform) ? type+'(' : '';
-				for (var j = 0, length = values.length; j<length; j+=2) {
-					if (j > 0) frames[i][name] += divider;
-					var string = null, old = values[j], nu = values[j+1];
-					if (isScale) string = scientificToDecimal(((progress * (old-nu)) + nu) / nu) + unit;
-					else string = scientificToDecimal((progress * (old-nu))) + unit;
-					frames[i][name] += string;
-				}
-				if (isTransform) frames[i][name] += ')';
-			}
-		}
-		return frames;
-	}
-	
-	function negativeDeltaEffect(dict,values) {
-		var frames = negativeDeltaKeyframes(dict,values);
-		return new KeyframeAnimationEffect(frames,'add');
-	}
-	
+ 	
 	function underlying(element,dict,values) {
 		if (document.timeline) {
-			if (!values) values = dict.values;
+			if (!values) values = dict.nu || dict.to || dict.values;
 			if (values && !isArray(values)) values = values.call(element);
 			if (values && isArray(values) && values.length) {
-				var operation = dict.operation || 'replace';
-				var frames = underlyingKeyframes(dict);
+				var operation = dict.operation || 'replace'; // operation has a different name in hyperEffect
+				var frames = hyperKeyframes(dict,values,values,true);
 				var effect = new KeyframeAnimationEffect(frames, operation);
 				var delay = document.timeline.currentTime;
 				var timing = {duration:0, fill:"both", delay:delay};
@@ -213,81 +147,121 @@
 		}
 	}
 	
-	function seamless(element,dict,values) {
-		if (dict.duration > 0) {
-			if (!values) values = dict.values;
-			if (values && !isArray(values)) values = values.call(element);
-			if (values && isArray(values) && values.length) {
-				for (var length = values.length, i = 1; i < length; i+=2) {
-					if (values[i-1] - values[i]) {
-						var effect = negativeDeltaEffect(dict, values);
-						var timing = negativeDeltaTiming(dict);
-						var anim = new Animation(element, effect, timing);
-						document.timeline.play(anim);
-						break;
-					}
-				}
-			}
-		}
+	function hyperTiming(dict) {
+ 		var duration = dict.duration;
+ 		var easing = perfect;
+ 		if (dict.easing && typeof dict.easing != 'string') easing = 'linear';
+ 		else if (dict.easing) easing = dict.easing;
+ 		var delay = (dict.delay) ? dict.delay : 0;
+ 		if (dict.key) delay += document.timeline.currentTime;	
+		return {duration:duration, easing:easing, fill:'backwards', delay:delay};
 	}
 	
-	$.fn.copyAnimationsFrom = function(input,property) {
+	function hyperKeyframes(dict,old,nu,seams) {
+		var frames = [], type = dict.type, unit = dict.unit, steps = dict.steps;
+		var callback = null;
+		if (dict.easing && typeof dict.easing != 'string') callback = dict.easing;
+		if (!unit) unit = "";
+		var isScale = (type.substr(0,5) == 'scale');
+		var isTransform = (isScale || type.substr(0,6) == 'rotate' || type.substr(0,9) == 'translate' ||  type.substr(0,6) == 'matrix');
+		var name = (isTransform) ? 'transform' : type;
+		var divider = (isTransform) ? ", " : " ";
+		if (steps === null || steps === undefined) steps = defaultSteps;
+		if (!callback || steps < 3) steps = 2;
+		for (var i=0;i<steps;i++) {
+			var offset = scientificToDecimal( (1.0/(steps-1))*i ) * 1.0; // offset from 0 to 1
+			var progress = 1.0 - offset;
+			if (callback && i < steps) progress = 1 - callback.call(null,offset); // should I enforce 0 and 1 for first and last?
+			frames[i] = {'offset':offset};
+			frames[i][name] = (isTransform) ? type+'(' : '';
+			var length = Math.min(old.length,nu.length);
+			for (var j = 0; j<length; j++) {
+				if (j > 0) frames[i][name] += divider;
+				var string = null, a = old[j], b = nu[j];
+				if (seams) string = scientificToDecimal(a+(progress*(b-a))) + unit;
+				else if (isScale) string = scientificToDecimal(((progress * (a-b)) + b) / b) + unit;
+				else string = scientificToDecimal((progress * (a-b))) + unit;
+				frames[i][name] += string;
+			}
+			if (isTransform) frames[i][name] += ')';
+		}
+		return frames;
+	}
+	
+	function hyperEffect(dict,old,nu,seams) {
+		var frames = hyperKeyframes(dict,old,nu,seams);
+		var compositing = "add";
+		if (dict.add === false || dict.additive === false) compositing = "replace"; // wrong. should be dict.operation like in function underlying
+		return new KeyframeAnimationEffect(frames,compositing);
+	}
+	
+	function hyperAnimate(element,effect,timing) {
+		var anim = new Animation(element, effect, timing);
+		anim.onend = function() {
+			if (!anim.parent) {
+				if (anim._player === null || anim._player === undefined) console.log('theAnimation._player does not exist');
+				else anim._player._deregisterFromTimeline();
+			}
+		};
+		document.timeline.play(anim);
+	}
+	
+	$.fn.hyperCopyFrom = function(input,property) {
 		if (document.timeline) copyArrays(copyingInputArray(input),copyingSelectionArray(this),property);
 		return this;
 	}
 
-	$.fn.copyAnimationsTo = function(input,property) {
+	$.fn.hyperCopyTo = function(input,property) {
 		if (document.timeline) copyArrays(copyingSelectionArray(this),copyingInputArray(input),property);
 		return this;
 	}
-
-	$.fn.underlying = function(dict) {
-		if (document.timeline && dict.type && dict.values) this.each( function(index,element) {
-			underlying(element,dict);
-		});
-		return this;
-	};
-
-	$.fn.seamless = function(dict) {
-		if (document.timeline && dict.type && dict.values) {
-			this.each( function(index,element) {
-				seamless(element,dict);
-			});
-		}
-		return this;
-	};
-
+	
 	$.fn.hypermatic = function(dict) {	
-		if (document.timeline && dict.type && dict.values) {
+		if (document.timeline && dict.type && (dict.values || dict.nu || dict.to)) {
 			this.each( function(index,element) {
-				var nu = dict.values;
-				var hyperValues = $(element).data("hypermaticValueDict");
-				if (!hyperValues) {
-					 hyperValues = {};
-					 $(element).data("hypermaticValueDict",hyperValues);
-				} 
-				if (nu) {
-					if (!isArray(nu)) nu = nu.call(element);
-					var old = hyperValues[dict.type];
-					var fill = (dict.fill === true || dict.fill == "forwards" || dict.fill == "both");
-					if (old || fill) {
-						var values = [];
-						var length = nu.length;
-						for (var i=0; i<length; i++) {
-							values[i*2] = (old === null || old === undefined) ? 0.0000 : old[i];
-							values[(i*2)+1] = nu[i];
-						}
-						if (fill) {
-							var newValues = [];
-							for (var i=0; i<length; i+=2) {
-								newValues[newValues.length] = values[i];
-							}
-							underlying(element,dict,newValues);
-						}
-						seamless(element,dict,values);
+				var nu = dict.nu;
+				if (!nu && nu !== 0) nu = dict.to;
+				var old = dict.old;
+				if (!old && old !== 0) old = dict.from;
+				if (!nu && nu !== 0 && !old && old !== 0 && dict.values) {
+					old = [];
+					nu = [];
+					var length = Math.floor(dict.values.length/2.0);
+					for (var i=0; i<length; i++) {
+						old[i] = dict.values[i*2];
+						nu[i] = dict.values[(i*2)+1];
 					}
 				}
-				hyperValues[dict.type] = nu;
+				if (nu || nu === 0) {
+					if (isFunction(nu)) nu = nu.call(element);
+					if (!isArray(nu)) nu = [nu];
+					var seams = dict.from || dict.from === 0 || dict.to || dict.to === 0;
+					if (!old && old !== 0) {
+						var list = $(element).data("hypermaticValueDict");
+						if (!list) {
+							 list = {};
+							 $(element).data("hypermaticValueDict",list);
+						} else old = list[dict.type];
+						list[dict.type] = nu;
+					}
+					if (dict.duration > 0) {
+						if (old || old === 0) {
+							if (isFunction(old)) old = old.call(element);
+							if (!isArray(old)) old = [old];
+							var i = Math.min(old.length,nu.length);
+							while (i--) {
+								if (old[i] - nu[i]) {
+									var effect = hyperEffect(dict,old,nu,seams);
+									var timing = hyperTiming(dict);
+									hyperAnimate(element,effect,timing);
+									break;
+								}
+							}
+						}
+					}
+				}
+				if (dict.fill === true) underlying(element,dict,nu);
+				else if (isFunction(dict.fill)) dict.fill.call(element);
 			});
 		}
 		return this;
