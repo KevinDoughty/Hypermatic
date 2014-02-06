@@ -45,6 +45,10 @@ then animates using `translate`.
 
 This might be renamed in future versions.
 
+#### `steps`
+
+Optional, defaults to 50 if `easing` is used, has no effect otherwise. This is needed because `easing` is emulated using keyframes.
+
 #### `old` and `nu`
 
 Specify animation origin and destination values absolutely but have them converted to relative animations behind the scenes,
