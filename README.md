@@ -7,7 +7,7 @@ This is the best technique for responding to rapid user events.
 More in depth explaination and interactive demos are avaliable at [http://kxdx.org](http://kxdx.org).
 
 
-### hypermatic()
+### $.fn.hypermatic()
 
 The primary function, which takes an object literal for the sole argument.
 There are three ways to define animation origin and destination values,
