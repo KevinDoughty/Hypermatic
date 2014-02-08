@@ -5,6 +5,8 @@ The animations are additive, declared absolutely but are converted to relative a
 animating from the old value minus the new value, to a destination value of zero.
 This is the best technique for responding to rapid user events.
 More in depth explaination and interactive demos are avaliable at [http://kxdx.org](http://kxdx.org).
+The Web Animations spec is still in draft and subject to change, which happens often. 
+Because of the volatility this is should not be used in the real world, for the time being.
 
 
 ### $.fn.hypermatic()
