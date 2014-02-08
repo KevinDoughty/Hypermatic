@@ -138,7 +138,7 @@
 			if (values && isArray(values) && values.length) {
 				var operation = dict.operation || 'replace'; // operation has a different name in hyperEffect
 				var frames = hyperKeyframes(dict,values,values,true);
-				var effect = new KeyframeAnimationEffect(frames, operation);
+				var effect = new KeyframeEffect(frames, operation);
 				var delay = document.timeline.currentTime;
 				var timing = {duration:0, fill:"both", delay:delay};
 				var anim = new Animation(element, effect, timing);
@@ -192,7 +192,7 @@
 		var frames = hyperKeyframes(dict,old,nu,seams);
 		var compositing = "add";
 		if (dict.add === false || dict.additive === false) compositing = "replace"; // wrong. should be dict.operation like in function underlying
-		return new KeyframeAnimationEffect(frames,compositing);
+		return new KeyframeEffect(frames,compositing);
 	}
 	
 	function hyperAnimate(element,effect,timing) {
