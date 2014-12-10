@@ -1,13 +1,15 @@
 ## Hypermatic
 
-`Hypermatic` is a jQuery plugin for producing negative delta animation using the unfinished [Web Animations](http://www.w3.org/TR/web-animations/) [javascript shim](https://github.com/web-animations/web-animations-js).
-The animations are additive, declared absolutely but are converted to relative animations behind the scenes,
+`Hypermatic` is a jQuery plugin for producing relative animation using the unfinished [Web Animations](http://www.w3.org/TR/web-animations/) [javascript shim](https://github.com/web-animations/web-animations-js).
+The animations are additive, declared absolutely but are converted to relative behind the scenes,
 animating from the old value minus the new value, to a destination value of zero.
 This is the best technique for responding to rapid user events.
 More in depth explaination and interactive demos are avaliable at [http://kxdx.org](http://kxdx.org).
 The Web Animations spec is still in draft and subject to change, which happens often. 
-Because of the volatility this is should not be used in the real world, for the time being.
+Because of volatility this is should not be used in the real world.
 
+I am grateful to Brian Birtles and Shane Stephens for their assistance in getting me up and running, 
+and for their greater efforts in bringing Web-Animations to the world.
 
 ### $.fn.hypermatic()
 
