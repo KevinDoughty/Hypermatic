@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>osx-dock-menu</title>
+<style>
+body {
+    padding:0;
+    margin:0;
+    background-color: red;
+}
+#pass {
+    position:absolute;
+    width: 100%;
+    height: 100%;
+    background-color: green;
+    text-align: center;
+    -webkit-transition:-webkit-transform 999999999s;
+    -moz-transition:-moz-transform 999999999s;
+    -ms-transition:-ms-transform 999999999s;
+    -o-transition:-o-transform 999999999s;
+    transition:transform 999999999s;  
+}
+</style>
+</head>
+<body>
+<div id="pass"></div>
+</body>
+<!--<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>-->
+<script type="text/javascript" src="https://rawgit.com/web-animations/web-animations-js-legacy/93373af41ac6b6a0211517d5414b2943a4a87299/web-animations.js"></script>
+<script type="text/javascript" src="https://rawgit.com/KevinDoughty/Hypermatic/1764eade613f7230ff5e7148d909d24771629d43/hypermatic.js"></script>
+<script type="text/javascript">
+function getProperty(f) {
+    var e = document.documentElement;
+    for (var i=0; i<f.length; i++) {
+        if (f[i] in e.style) {
+            return f[i];
+        }
+    }
+}
+var cssTransform = getProperty(['transform', 'WebkitTransform', 'MozTransform', 'msTransform', 'OTransform']);
+var pass = document.getElementById("pass");
+var timer;
+function animateOne () {
+    pass.style[cssTransform] = "rotateY(90deg)";
+    timer = setTimeout(animateTwo,1);
+}
+function animateTwo () {
+    pass.style[cssTransform] = "rotateY(-90deg)";
+    timer = setTimeout(animateOne,1); 
+}
+var message = "Click to start test. Red flicker means failure.";
+pass.innerHTML = message;
+pass.onclick = function() {
+    if (pass.innerHTML != message) {
+        pass.innerHTML = message;
+        window.clearTimeout(timer);
+    } else {
+        pass.innerHTML = "Running test. Red flicker means failure. Click to stop.";
+        animateOne();
+    }
+}
+</script>
+</html>
