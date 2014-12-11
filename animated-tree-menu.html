@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>animated-tree-menu</title>
+<style>
+* {
+    margin:0;
+    padding:0;
+}
+
+body {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	padding: 1em 0em 1em 1em;
+	font-size: 12pt;
+}
+
+ol {
+	position:relative;
+}
+
+li { 
+	position:relative; 
+	list-style: none;
+	padding-left:1em;
+	border-right:1em solid transparent;
+}
+
+li input[type=checkbox] {
+	position: absolute;
+	left: 0;
+	margin-left: 0;
+	z-index: 1;
+	cursor: pointer;
+	height: 1em;
+	width: 1em;
+	top: 0;
+}
+
+li input[type=checkbox] ~ ol { 
+	height:auto;
+	position:absolute;
+	display: none;
+	opacity:0;
+}
+
+li input[type=checkbox]:checked ~ ol { 
+	position:relative;
+	display: block; 
+	opacity:1;
+}
+
+li input[type=checkbox] ~ ol > li { 
+	margin-right:-1em;
+}
+
+li label {  
+    display: inline-block;  
+    cursor: pointer;  
+    position: relative;
+    -webkit-user-select: none;       
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-o-user-select: none;
+	user-select: none; 
+}
+
+li input[type=checkbox] ~ div {
+	position:relative;
+	margin-left:-15px;
+	top:0.25em;
+}
+
+li input[type=checkbox] {  
+    opacity:0;
+    width:1em;
+    height: 1em;
+    font-size:1em;
+}  
+ 
+li input[type=checkbox] ~ div {  
+	width: 0px;
+	height: 0px;
+	margin-bottom:-10px;
+	margin-right:-10px;
+	border-style: solid;
+	border-width: 5px 0 5px 10px;
+	border-color: transparent transparent transparent black;	
+}
+
+li input[type=checkbox]:checked ~ div {  
+	border-width: 10px 5px 0 5px;
+	border-color: black transparent transparent transparent;
+}
+</style>
+</head>
+<body>
+<ol id="tree">
+		<li>
+			<input checked type="checkbox" id="zero" /><div></div><label for="zero">zero</label>
+			<ol>
+				<li>
+					<input type="checkbox" id="one" /><div></div><label for="one">one</label> 
+					<ol>
+						<li>
+							<input checked type="checkbox" id="two" /><div></div><label for="two">two</label>
+							<ol>
+								<li>
+									<input checked type="checkbox" id="three" /><div></div><label for="three">three</label> 
+									<ol>
+										<li>four</li>
+										<li>five</li>
+										<li>six</li>
+										<li>seven</li>
+									</ol>
+								</li>
+								<li>eight</li>
+								<li>nine</li>
+							</ol>
+						</li>
+						<li>ten</li>
+						<li>eleven</li>
+					</ol>
+				</li>
+				<li>twelve</li>
+				<li>thirteen</li>
+				<li>
+					<input type="checkbox" id="fourteen" /><div></div><label for="fourteen">fourteen</label> 
+					<ol>
+						<li>fifteen</li>
+						<li>sixteen</li>
+						<li>seventeen</li>
+						<li>
+							<input checked type="checkbox" id="eighteen" /><div></div><label for="eighteen">eighteen</label>
+							<ol>
+								<li>nineteen</li>
+								<li>twenty</li>
+								<li>twenty one</li>
+							</ol>
+						</li>
+						<li>twenty two</li>
+						<li>twenty three</li>
+						<li>twenty four</li>
+						<li>twenty five</li>
+					</ol>
+				</li>
+				<li>twenty six</li>
+				<li>twenty seven</li>
+				<li>
+					<input type="checkbox" id="twentyeight" /><div></div><label for="twentyeight">twenty eight</label>
+					<ol>
+						<li>
+							<input checked type="checkbox" id="twentynine" /><div></div><label for="twentynine">twenty nine</label> 
+							<ol>
+								<li>thirty</li>
+								<li>thirty one</li>
+								<li>
+									<input checked type="checkbox" id="thirtytwo" /><div></div><label for="thirtytwo">thirty two</label> 
+									<ol>
+										<li>
+											<input checked type="checkbox" id="thirtythree" /><div></div><label for="thirtythree">thirty three</label> 
+											<ol>
+												<li>thirty four</li>
+											</ol>
+										</li>
+										<li>thirty five</li>
+										<li>thirty six</li>
+										<li>thirty seven</li>
+										<li>
+											<input checked type="checkbox" id="thirtyeight" /><div></div><label for="thirtyeight">thirty eight</label> 
+											<ol>
+												<li>thirty nine</li>
+												<li>forty</li>
+											</ol>
+										</li>
+									</ol>
+								</li>
+								<li>
+									<input checked type="checkbox" id="fortyone" /><div></div><label for="fortyone">forty one</label> 
+									<ol>
+										<li>forty two</li>
+										<li>forty three</li>
+										<li>forty four</li>
+									</ol>
+								</li>
+								<li>forty five</li>
+								<li>forty six</li>
+							</ol>
+						</li>
+						<li>
+							<input checked type="checkbox" id="fortyseven" /><div></div><label for="fortyseven">forty seven</label> 
+							<ol>
+								<li>
+									<input checked type="checkbox" id="fortyeight" /><div></div><label for="fortyeight">forty eight</label> 
+									<ol>
+										<li>
+											<input checked type="checkbox" id="fortynine" /><div></div><label for="fortynine">forty nine</label> 
+											<ol>
+												<li>fifty</li>
+											</ol>
+										</li>
+									</ol>
+								</li>
+							</ol>
+						</li>
+					</ol>
+				</li>
+				<li>
+					<input type="checkbox" id="fiftyone" /><div></div><label for="fiftyone">fifty one</label> 
+					<ol>
+						<li>
+							<input checked type="checkbox" id="fiftytwo" /><div></div><label for="fiftytwo">fifty two</label> 
+							<ol>
+								<li>
+									<input checked type="checkbox" id="fiftythree" /><div></div><label for="fiftythree">fifty three</label> 
+									<ol>
+										<li>
+											<input checked type="checkbox" id="fiftyfour" /><div></div><label for="fiftyfour">fifty four</label> 
+											<ol>
+												<li>fifty five</li>
+											</ol>
+										</li>
+									</ol>
+								</li>
+								<li>
+									<input checked type="checkbox" id="fiftysix" /><div></div><label for="fiftysix">fifty six</label> 
+									<ol>
+										<li>
+											<input checked type="checkbox" id="fiftyseven" /><div></div><label for="fiftyseven">fifty seven</label> 
+											<ol>
+												<li>fifty eight</li>
+											</ol>
+										</li>
+									</ol>
+								</li>
+							</ol>
+						</li>
+						<li>
+							<input checked type="checkbox" id="fiftynine" /><div></div><label for="fiftynine">fifty nine</label> 
+							<ol>
+								<li>
+									<input checked type="checkbox" id="sixty" /><div></div><label for="sixty">sixty</label> 
+									<ol>
+										<li>
+											<input checked type="checkbox" id="sixtyone" /><div></div><label for="sixtyone">sixty one</label> 
+											<ol>
+												<li>sixty two</li>
+											</ol>
+										</li>
+									</ol>
+								</li>
+							</ol>
+						</li>
+					</ol>
+				</li>
+			</ol>
+		</li>
+		<li>sixty three</li>
+	</ol>
+	
+</body>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://rawgit.com/web-animations/web-animations-js-legacy/93373af41ac6b6a0211517d5414b2943a4a87299/web-animations.js"></script>
+<script type="text/javascript" src="https://rawgit.com/KevinDoughty/Hypermatic/1764eade613f7230ff5e7148d909d24771629d43/hypermatic.js"></script>
+<script type="text/javascript">
+// Hypermatic animation by Kevin Doughty http://kxdx.org using https://github.com/web-animations/web-animations-js/ and https://github.com/KevinDoughty/Hypermatic/
+
+var scrollY = 0;
+var underneathSibling = null;
+var shiftKeyPressed = false;
+
+function toggleKeys(e) {
+	shiftKeyPressed = e.shiftKey;
+}
+
+function scroll () {
+	scrollY = window.pageYOffset;
+}
+	
+function underneathSiblingOfElement(element,container) {
+	while ((element = element.parentNode) && element != container.parentNode && !$(element).next()[0]) {}
+	return $(element).next()[0];
+}
+
+function nextUnderneathSiblingOfElementInContainer(element,container) {
+	if ($(element).next()[0]) return $(element).next()[0];
+	return underneathSiblingOfElement(element,container);
+}
+
+$("input, label").on('mousedown', function () {
+	var container = $(this).closest('.tree');
+	underneathSibling = underneathSiblingOfElement(this,container);
+	if (underneathSibling) fromY = underneathSibling.offsetTop;
+});
+
+function elastic(position,omega,zeta) { // From http://www.cocoawithlove.com/2008/09/parametric-acceleration-curves-in-core.html by Matt Gallagher, used with permission!
+	var beta = Math.sqrt(1.0 - zeta * zeta);
+	var value = 1.0 / beta * Math.exp(-zeta * omega * position) * Math.sin(beta * omega * position + Math.atan(beta / zeta));
+	return 1-value;
+}
+function defaultBounce(position) {
+	return elastic(position, 10, 0.8);
+}
+function triangleBounce(position) {
+	return elastic(position, 15, 0.4);
+}
+function opacityBounce(position) {
+	return elastic(position, 10, 0.999);
+}
+	
+$("input").on('change', function () {
+
+	var duration = 0.75 * ((shiftKeyPressed) ? 10 : 1);
+	
+	var fromDegrees = 0;
+	var toDegrees = 0;
+	if (this.checked) fromDegrees = -90;
+	else fromDegrees = 90;
+	
+	var fromOpacity = 0;
+	var toOpacity = 0;
+	if (this.checked) toOpacity = 1;
+	else fromOpacity = 1;
+	
+	var listItem = $(this).closest('li');
+	var label = $(listItem).children('label')[0];
+	var subContainer = $(listItem).children('ol')[0];
+	var triangle = $(listItem).children('div')[0];
+
+	$(triangle).hypermatic({
+		type:'rotate',
+		unit:'deg',
+		duration:duration,
+		easing:triangleBounce,
+		values:[fromDegrees,toDegrees]
+	});
+	
+	if (!this.checked) document.timeline.play(new Animation(subContainer, { display:"block"}, { duration:duration, easing:"step-start", fill:"none" }));
+	
+	$(subContainer).hypermatic({
+		type:'opacity',
+		duration:duration,
+		easing:opacityBounce,
+		values:[fromOpacity,toOpacity]
+	});
+	
+	if (underneathSibling) {
+		var toY = underneathSibling.offsetTop;
+		var container = $(this).closest('.tree');
+		do {
+			$(underneathSibling).hypermatic({
+				type:'translate',
+				unit:'px',
+				duration:duration,
+				easing:defaultBounce,
+				values:[0,0,fromY,toY]
+			});
+		} while ((underneathSibling = nextUnderneathSiblingOfElementInContainer(underneathSibling,container)));
+	}
+	
+	var clipY = window.pageYOffset;
+	if (clipY != scrollY) {
+		$(document.body).hypermatic({
+			type:'translate',
+			unit:'px',
+			duration:duration,
+			easing:defaultBounce,
+			values:[0,0,clipY,scrollY]
+		});
+	}
+});   
+
+document.addEventListener('keydown',toggleKeys,false);
+document.addEventListener('keyup',toggleKeys,false);
+window.onscroll = scroll;
+</script>
+</html>
