@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>negative-delta-rotate</title>
+<style>
+#cssTransition, #toAnimation, #additive, #additiveKeyframe {
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    top: 50px;
+    -webkit-user-select: none;       
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-o-user-select: none;
+	user-select: none;
+}
+#cssTransition {
+	left: 50px;
+    background: red;
+}
+#toAnimation {
+	left: 200px;
+    background: red;
+}
+#cssTransitionNested {
+	width: 100px;
+    height: 100px;
+	background: -webkit-linear-gradient( 0deg, blue, lightblue );
+    background: -moz-linear-gradient( 0deg, blue, lightblue ); 
+    background: -ms-linear-gradient( 0deg, blue, lightblue );
+    background: -o-linear-gradient( 0deg, blue, lightblue );
+    background: linear-gradient( 0deg, blue, lightblue );
+}
+#toAnimationNested {
+	width: 100px;
+    height: 100px;
+	background: -webkit-linear-gradient( 0deg, purple, #e5cce5 );
+    background: -moz-linear-gradient( 0deg, purple, #e5cce5 );
+    background: -ms-linear-gradient( 0deg, purple, #e5cce5 );
+    background: -o-linear-gradient( 0deg, purple, #e5cce5 );
+    background: linear-gradient( 0deg, purple, #e5cce5 );
+}
+#additive {
+	left: 350px;
+    background: -webkit-linear-gradient( 0deg, green, lightgreen );
+    background: -moz-linear-gradient( 0deg, green, lightgreen );
+    background: -ms-linear-gradient( 0deg, green, lightgreen );
+    background: -o-linear-gradient( 0deg, green, lightgreen );
+    background: linear-gradient( 0deg, green, lightgreen );
+}
+#additiveKeyframe {
+	left: 500px;
+    background: -webkit-linear-gradient( 0deg, orange, #ffedcc );
+    background: -moz-linear-gradient( 0deg, orange, #ffedcc );
+    background: -ms-linear-gradient( 0deg, orange, #ffedcc );
+    background: -o-linear-gradient( 0deg, orange, #ffedcc );
+    background: linear-gradient( 0deg, orange, #ffedcc );
+}
+.fast {
+    -webkit-transition:-webkit-transform 2.5s cubic-bezier(.5, 0, .5, 1);
+    -moz-transition:-moz-transform 2.5s cubic-bezier(.5, 0, .5, 1);
+    -ms-transition:-ms-transform 2.5s cubic-bezier(.5, 0, .5, 1);
+    -o-transition:-o-transform 2.5s cubic-bezier(.5, 0, .5, 1);
+    transition:transform 2.5s cubic-bezier(.5, 0, .5, 1);
+}
+.slow {
+    -webkit-transition:-webkit-transform 10s cubic-bezier(.5, 0, .5, 1);
+    -moz-transition:-moz-transform 10s cubic-bezier(.5, 0, .5, 1);
+    -ms-transition:-ms-transform 10s cubic-bezier(.5, 0, .5, 1);
+    -o-transition:-o-transform 10s cubic-bezier(.5, 0, .5, 1);
+    transition:transform 10s cubic-bezier(.5, 0, .5, 1);
+}
+</style>
+</head>
+<body>
+<div id='cssTransition'><div id='cssTransitionNested' class="fast">CSS</div></div>
+<div id='toAnimation'><div id='toAnimationNested'>To-animation</div></div>
+<div id='additive'>Negative Delta</div>
+<div id='additiveKeyframe'>Negative Delta Keyframes</div>
+</body>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://rawgit.com/web-animations/web-animations-js-legacy/93373af41ac6b6a0211517d5414b2943a4a87299/web-animations.js"></script>
+<script type="text/javascript" src="https://rawgit.com/KevinDoughty/Hypermatic/1764eade613f7230ff5e7148d909d24771629d43/hypermatic.js"></script>
+<script type="text/javascript">
+// Hypermatic animation by Kevin Doughty http://kxdx.org using https://github.com/web-animations/web-animations-js/ and https://github.com/KevinDoughty/Hypermatic/
+
+var cssTransition = document.getElementById('cssTransition');
+var cssTransitionNested = document.getElementById('cssTransitionNested');
+var toAnimation = document.getElementById('toAnimation');
+var toAnimationNested = document.getElementById('toAnimationNested');
+var additiveKeyframe = document.getElementById('additiveKeyframe');
+var additive = document.getElementById('additive');
+
+var theWidth = document.body.offsetWidth;
+var firstX = null;
+var oldX = null;
+var newX = null;
+var oldMousedown = false;
+var newMousedown = false;
+var shiftKeyPressed = false;
+
+function getProperty(f) {
+    var e = document.documentElement;
+    for (var i=0; i<f.length; i++) {
+        if (f[i] in e.style) {
+            return f[i];
+        }
+    }
+}
+var prefixedTransform = getProperty(['transform', 'WebkitTransform', 'MozTransform', 'msTransform', 'OTransform']);
+
+function layout(animate) {
+    
+    var duration = (shiftKeyPressed) ? 10.0 : 2.5;
+    
+    var rotationDegrees = 90.0;
+	var theWidth = document.body.offsetWidth;
+    var oldDegrees = (oldX/theWidth) * 360.0;
+    var newDegrees = (newX/theWidth) * 360.0;
+    var oldExtra = 0.0;
+    var newExtra = 0.0;
+    if (oldMousedown === true) oldExtra = rotationDegrees;
+    if (newMousedown === true) newExtra = rotationDegrees;
+    var fromDegrees = oldDegrees + oldExtra;
+    var toDegrees = newDegrees + newExtra;
+    	
+    if (cssTransition) {
+    	cssTransition.style[prefixedTransform] = 'rotate('+newDegrees+'deg)';
+    	if (cssTransitionNested && animate === true) {
+    		if (shiftKeyPressed) cssTransitionNested.className = "slow";
+			else cssTransitionNested.className = "fast";
+			cssTransitionNested.style[prefixedTransform] = 'rotate('+newExtra+'deg)';
+    	}
+    }
+	
+    if (toAnimation) {
+    	toAnimation.style[prefixedTransform] = 'rotate('+newDegrees+'deg)';
+    	if (toAnimationNested && animate === true) {
+			document.timeline.play(new Animation(toAnimationNested, { 'transform': 'rotate('+newExtra+'deg)'},
+			{duration:duration, easing:'cubic-bezier(0.5, 0.0, 0.5, 1.0)', fill:'forwards'}));
+		}
+	}
+    
+    if (additive) {
+		$(additive).hypermatic({
+			type:'rotate',
+			unit:'deg',
+            fill:true,
+            duration:(animate === true) ? duration : 0,
+			values:[fromDegrees,toDegrees]
+		});
+	}
+	
+    if (additiveKeyframe) {
+		$(additiveKeyframe).hypermatic({
+			type:'rotate',
+			unit:'deg',
+            fill:true,
+			duration:(animate === true) ? duration : 0,
+            values:[fromDegrees,toDegrees],
+			easing: function(position) { // from http://www.cocoawithlove.com/2008/09/parametric-acceleration-curves-in-core.html by Matt Gallagher, used with permission!
+				var omega = 20;
+				var zeta = 0.25;
+				var beta = Math.sqrt(1.0 - zeta * zeta);
+				var value = 1.0 / beta * Math.exp(-zeta * omega * position) * Math.sin(beta * omega * position + Math.atan(beta / zeta));
+				return 1-value;
+			} 
+		});
+	}
+	
+}
+
+function toggleShiftKey(e) {
+	shiftKeyPressed = e.shiftKey;
+}
+
+document.addEventListener('mousedown', function(ev){
+	newMousedown = true;
+	layout(true);
+	oldMousedown = true;
+},false);
+document.addEventListener('mouseup', function(ev){
+	newMousedown = false;
+	layout(true);
+	oldMousedown = false;
+},false);
+document.addEventListener('mousemove', function(ev){
+	if (firstX === null) {
+		firstX = ev.clientX;
+		oldX = ev.clientX + (document.body.offsetWidth - firstX);
+	}
+	newX = ev.clientX + (document.body.offsetWidth - firstX);
+	layout(false);
+	oldX = newX;
+},false);
+window.addEventListener('resize', function(ev){
+	firstX = null;
+},false);
+
+document.addEventListener('keydown',toggleShiftKey,false);
+document.addEventListener('keyup',toggleShiftKey,false);
+</script>
+</html>
