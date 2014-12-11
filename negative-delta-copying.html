@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>negative-delta-copying</title>
+<style>
+* {
+	margin:0;
+	padding:0;
+}
+div {
+	position:absolute;
+    height:100%;
+}
+input {
+	margin-bottom:-100%;
+	position:relative;
+	z-index:1;
+}
+</style>
+</head>
+<body>
+<input type="button" value="very slow" onclick = "toggle(32);">
+<input type="button" value="slow" onclick = "toggle(16);">
+<input type="button" value="medium" onclick = "toggle(8);">
+<input type="button" value="fast" onclick = "toggle(4);">
+<input type="button" value="very fast" onclick = "toggle(2);">
+<input type="button" value="merge" onclick = "merge();">
+</body>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://rawgit.com/web-animations/web-animations-js-legacy/93373af41ac6b6a0211517d5414b2943a4a87299/web-animations.js"></script>
+<script type="text/javascript" src="https://rawgit.com/KevinDoughty/Hypermatic/1764eade613f7230ff5e7148d909d24771629d43/hypermatic.js"></script>
+<script type="text/javascript">
+// Hypermatic animation by Kevin Doughty http://kxdx.org using https://github.com/web-animations/web-animations-js/ and https://github.com/KevinDoughty/Hypermatic/
+
+var originalWidth = 300;
+var insertBefore = false;
+var toggled = false;
+
+function windowResize(e) {
+	layout(0);
+}
+
+function toggle(duration) {
+	toggled = !toggled;
+	layout(duration);
+}
+
+function layout(duration) {
+	var theDivs = document.querySelectorAll('div');
+	var theLength = theDivs.length;
+	if (toggled) {
+		var theLoc = document.body.offsetWidth;
+		var i = theLength;
+		while (i--) {
+			var theDiv = theDivs[i];
+			var theWidth = theDiv.offsetWidth;
+			theLoc -= theWidth;
+			layoutDiv(theDiv,theLoc,duration);
+		}
+	} else { 
+		var theLoc = 0;
+		for (var i=0; i<theLength; i++) {
+			var theDiv = theDivs[i];
+			var theWidth = theDiv.offsetWidth;
+			layoutDiv(theDiv,theLoc,duration);
+			theLoc += theWidth;
+		}
+	}	
+}
+
+function layoutDiv(theDiv,newX,duration) {
+	var oldX = theDiv.destinationX;
+	if (oldX === null || oldX === undefined) oldX = 0;
+	if (oldX != newX) {
+		positionDiv(theDiv,newX);
+		$(theDiv).hypermatic({
+			type:'left',
+			unit:'px',
+			duration:duration,
+			values:[oldX,newX]
+		});
+	}
+}
+
+function merge() {
+	var theDivs = document.querySelectorAll('div');
+	if (insertBefore) {
+		var i = theDivs.length;
+		while (i-- > 1) {
+			removeDiv(theDivs[i]);
+		}
+		theDivs[0].style.width = originalWidth+'px';
+	} else {
+		var i = theDivs.length-1;
+		positionDiv(theDivs[i],theDivs[0].destinationX);
+		theDivs[i].style.width = originalWidth+'px';
+		while (i--) {
+			removeDiv(theDivs[i]);
+		}
+	}
+}
+
+function removeDiv(theDiv) {
+	var theUnderlying = theDiv.underlyingValueAnimation;
+	theDiv.removeEventListener('mousedown', divClicked);
+	theDiv.parentNode.removeChild(theDiv);
+}
+
+function positionDiv(what,where) {
+	$(what).hypermatic({
+		type:'left',
+		unit:'px',
+        fill:true,
+		nu:[where]
+	});
+	what.destinationX = where;
+}
+
+function randomColor() {
+	return 'hsl(' + (Math.random()*360) + ','+(Math.random()*100)+'%,'+(15 + (Math.random()*70))+'%)';
+	
+}
+
+function splitDiv(theDiv,eventX) {  
+	var presentationX = theDiv.offsetLeft;
+	if (insertBefore) {
+		var theNewDivWidth = (eventX - presentationX);
+		var theOriginalDivWidth = theDiv.offsetWidth-theNewDivWidth;
+		if (theOriginalDivWidth && theNewDivWidth) {
+			var theOldModelX = theDiv.destinationX;
+			theDiv.style.width = theOriginalDivWidth+'px';
+			positionDiv(theDiv,theOldModelX+theNewDivWidth);
+			var newDiv = createDiv(theOldModelX,theNewDivWidth);
+			insertDivBefore(newDiv,theDiv);
+			$(theDiv).hyperCopyTo(newDiv,'left');
+		}
+	} else {
+		var theOriginalDivWidth = (eventX - presentationX);
+		var theNewDivWidth = theDiv.offsetWidth-theOriginalDivWidth;
+		if (theOriginalDivWidth && theNewDivWidth) {
+			var theOldModelX = theDiv.destinationX;
+			theDiv.style.width = theOriginalDivWidth+'px';
+			var newDiv = createDiv(theOldModelX+theOriginalDivWidth,theNewDivWidth);
+			insertDivAfter(newDiv,theDiv);
+			$(theDiv).hyperCopyTo(newDiv,'left');
+		}
+	}
+}
+
+function createDiv(loc,width) {
+	var theDiv = document.createElement('div');
+	theDiv.style.width = width+'px';
+	theDiv.style.background = randomColor();
+	positionDiv(theDiv,loc);
+	theDiv.addEventListener('mousedown',divClicked,false);
+	return theDiv;
+}
+
+function insertDivBefore(theDiv,before) {
+	if (before === null || before === undefined) before = document.body.firstChild;
+	document.body.insertBefore(theDiv, before);
+}
+
+function insertDivAfter(theDiv,after) {
+	after.parentNode.insertBefore(theDiv, after.nextSibling);
+}
+
+function divClicked(ev) {
+	splitDiv(this,ev.clientX);
+}
+
+insertDivBefore(createDiv(0,originalWidth),document.body.firstChild);
+window.addEventListener('resize',windowResize, false);
+</script>
+</html>
