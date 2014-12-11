@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>negative-delta-translate</title>
+<style>
+#additive {}
+#additiveKeyframe {}
+#cssTransition, #toAnimation, #additive, #additiveKeyframe {
+    width: 50px;
+    height: 50px;
+    position: absolute;
+    border-radius: 25px;
+    top: 0px;
+    left: 0px;
+    opacity:0.5;
+    -webkit-user-select: none;       
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-o-user-select: none;
+	user-select: none;
+}
+#cssTransition {
+    background-color:blue;
+}
+#toAnimation {
+    background-color:purple;
+}
+#additive {
+    background-color:green;
+}
+#additiveKeyframe {
+    background-color:orange;
+}
+.fast {
+    -webkit-transition:-webkit-transform 1s cubic-bezier(.5, 0, .5, 1);
+    -moz-transition:-moz-transform 1s cubic-bezier(.5, 0, .5, 1);
+    -ms-transition:-ms-transform 1s cubic-bezier(.5, 0, .5, 1);
+    -o-transition:-o-transform 1s cubic-bezier(.5, 0, .5, 1);
+    transition:transform 1s cubic-bezier(.5, 0, .5, 1);
+}
+.slow {
+    -webkit-transition:-webkit-transform 5s cubic-bezier(.5, 0, .5, 1);
+    -moz-transition:-moz-transform 5s cubic-bezier(.5, 0, .5, 1);
+    -ms-transition:-ms-transform 5s cubic-bezier(.5, 0, .5, 1);
+    -o-transition:-o-transform 5s cubic-bezier(.5, 0, .5, 1);
+    transition:transform 5s cubic-bezier(.5, 0, .5, 1);
+}
+</style>
+</head>
+<body>
+<div id='cssTransition' class="slow"></div>
+<div id='toAnimation'></div>
+<div id='additive'></div>
+<div id='additiveKeyframe'></div>
+</body>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://rawgit.com/web-animations/web-animations-js-legacy/93373af41ac6b6a0211517d5414b2943a4a87299/web-animations.js"></script>
+<script type="text/javascript" src="https://rawgit.com/KevinDoughty/Hypermatic/1764eade613f7230ff5e7148d909d24771629d43/hypermatic.js"></script>
+<script type="text/javascript">
+// Hypermatic animation by Kevin Doughty http://kxdx.org using https://github.com/web-animations/web-animations-js/ and https://github.com/KevinDoughty/Hypermatic/
+
+var cssTransition = document.getElementById('cssTransition');
+var toAnimation = document.getElementById('toAnimation');
+var additive = document.getElementById('additive');
+var additiveKeyframe = document.getElementById('additiveKeyframe');
+var radius = 25;
+var oldX = 0;
+var oldY = 0;
+var dragging = false;
+
+function getProperty(f) {
+    var e = document.documentElement;
+    for (var i=0; i<f.length; i++) {
+        if (f[i] in e.style) {
+            return f[i];
+        }
+    }
+}
+
+var prefixedTransform = getProperty(['transform', 'WebkitTransform', 'MozTransform', 'msTransform', 'OTransform']);
+
+function layout(e) {
+	layoutXandY(e.clientX,e.clientY);
+}
+
+function layoutXandY(x,y) {
+    
+    var duration = (dragging) ? 1.0 : 5.0;
+    var zeta = (dragging) ? 0.25 : 0.5;
+    var omega = (dragging) ? 20 : 10;
+    
+    var newX = x-radius;
+    var newY = y-radius;
+    
+    if (cssTransition) {
+    	cssTransition.style[prefixedTransform] = 'translate('+newX+'px,'+newY+'px)';
+    }
+    
+    if (toAnimation) {
+		document.timeline.play(
+			new Animation(toAnimation, { 'transform': 'translate('+newX+'px,'+newY+'px)'},
+			{duration: duration, easing:'cubic-bezier(0.5, 0.0, 0.5, 1.0)', fill: 'forwards'}));
+	}
+	
+	if (additive) {
+		$(additive).hypermatic({
+			type:'translate3d',
+			unit:'px',
+			duration:duration,
+			fill:true,
+			nu:[newX,newY,0]
+		});
+	}
+	
+	if (additiveKeyframe) {
+		$(additiveKeyframe).hypermatic({
+			type:'translate3d',
+			unit:'px',
+			duration:duration,
+			fill:true,
+			nu:[newX,newY,0],
+			easing:function(position) { // from http://www.cocoawithlove.com/2008/09/parametric-acceleration-curves-in-core.html by Matt Gallagher, used with permission!
+				var zeta = (dragging) ? 0.25 : 0.5;
+				var omega = (dragging) ? 20 : 10;
+				position = 1 - Math.cos( position * Math.PI / 2 );
+				var beta = Math.sqrt(1.0 - zeta * zeta);
+				position = 1.0 / beta * Math.exp(-zeta * omega * position) * Math.sin(beta * omega * position + Math.atan(beta / zeta));
+				return 1-position;
+			}
+		});
+	}
+	
+    oldX = newX;
+    oldY = newY;
+}
+
+layoutXandY(radius,radius);
+
+document.addEventListener('mousedown', function(ev) {
+    var newX = ev.clientX-radius;
+    var newY = ev.clientY-radius;
+ 	var deltaX = oldX-newX;
+    var deltaY = oldY-newY;
+	var over = (Math.sqrt(deltaX*deltaX + deltaY*deltaY) < radius);
+    if (over) {
+        dragging = true; 
+        if (cssTransition) cssTransition.className = "fast";
+    } else dragging = false;   
+    layout(ev);
+    document.addEventListener('mousemove', layout);
+},false);  
+document.addEventListener('mouseup', function(ev){
+    if (cssTransition) cssTransition.className = "slow";
+    document.removeEventListener('mousemove', layout);
+},false);
+</script>
+</html>
