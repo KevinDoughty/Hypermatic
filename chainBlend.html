@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>chainBlend</title>
+<style>
+
+html, body {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	margin: 0;
+	padding: 0;
+}
+
+#element {
+    width: 20px;
+    height: 20px;
+    position: absolute;
+   	left: 300px;
+   	top: 300px;
+    background-color:black;
+	border-radius:10px;
+}
+#canvas {
+	width: 1000px;
+	height: 1000px;
+}
+
+</style>
+
+<script type="text/javascript" src="https://rawgit.com/KevinDoughty/Hypermatic/74c0e0d7b36380897f143d8a1906cf605eff98dd/hypermatic.js"></script>
+
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+<div id="element"></div>
+
+<script type="text/javascript">
+'use strict';
+// Relative animation by Kevin Doughty http://kxdx.org using https://github.com/KevinDoughty/Hypermatic/
+
+
+var element = document.getElementById("element");
+
+function makeStarChain(start) {
+	var star = [];
+	var i = 5;
+	while (i--) {
+		star.unshift(makeStarChainSegment(i + start));
+	}
+	return {type : "chain", children:star};
+	return new HyperAnimationChain({children:star});
+
+}
+
+function makeStarChainSegment(segment) {
+	var radius = 100;
+	var theta;
+	var fromLoc = ((segment * 2) % 5) / 5;
+	var toLoc = (((segment * 2) % 5) + 2) / 5;
+	var fromTheta = (1 - fromLoc) * Math.PI * 2;
+	var fromX = Number( Math.cos(fromTheta) * radius ).toFixed(4);
+	var fromY = Number( Math.sin(fromTheta) * radius ).toFixed(4);
+	var toTheta = (1 - toLoc) * Math.PI * 2;
+	var toX = Number( Math.cos(toTheta) * radius ).toFixed(4);
+	var toY = Number( Math.sin(toTheta) * radius ).toFixed(4);
+	var r = fromTheta * (180/Math.PI);
+	return { 
+		type : "transform",
+		from : "translate3d("+(fromX)+"px,"+(fromY)+"px,0) rotate("+r+"deg)",
+		to : "translate3d("+(toX)+"px,"+(toY)+"px,0) rotate("+r+"deg)",
+		duration : 0.25,
+		easing : "cubic-bezier(.5,0,.5,1)",
+	 };
+}
+
+
+function makeDrawingChainSegment(segment) {
+	var radius = 100;
+	var theta;
+	var fromLoc = ((segment * 2) % 5) / 5;
+	var toLoc = (((segment * 2) % 5) + 2) / 5;
+	var fromTheta = (1 - fromLoc) * Math.PI * 2;
+	var fromX = Number( Math.cos(fromTheta) * radius ).toFixed(4);
+	var fromY = Number( Math.sin(fromTheta) * radius ).toFixed(4);
+	var toTheta = (1 - toLoc) * Math.PI * 2;
+	var toX = Number( Math.cos(toTheta) * radius ).toFixed(4);
+	var toY = Number( Math.sin(toTheta) * radius ).toFixed(4);
+	var r = fromTheta * (180/Math.PI);
+	//console.log("translate3d("+(toX)+"px,"+(toY)+"px,0) rotate("+r+"deg)");
+	return { 
+		type : "point",
+		from : {xxx:fromX, yyy:fromY},
+		to : {xxx:toX, yyy:toY},
+		duration : 0.25,
+		easing : "cubic-bezier(.5,0,.5,1)",
+	 };
+}
+
+function makeDrawingChain(start) {
+	var star = [];
+	var i = 5;
+	while (i--) {
+		star.unshift(makeDrawingChainSegment(i + start));
+	}
+	return {type : "chain", children:star};
+	return new HyperAnimationChain({children:star});
+}
+
+
+
+var rocketDuration = 2.5;
+var planetDuration = 1;
+
+var planetCounter = 0;
+var chainCounter = 0;
+
+
+var ticks = 5;
+var tick = 0;
+
+var perfect = "cubic-bezier(.5,0,.5,1)";
+var easeIn = "cubic-bezier(0.5,0,1,1)";
+var crazyEaseIn = "cubic-bezier(1,0,1,1)";
+var crazyEaseOut = "cubic-bezier(0,1,1,1)";
+
+		
+function layout() {
+	if (element) {
+		element.hyperAnimate(makeStarChain(chainCounter));
+		component.hyperAnimate(makeDrawingChain(chainCounter));
+		chainCounter++;
+	}
+}
+
+document.addEventListener('mousedown', function(e){
+	e.stopPropagation();
+	e.preventDefault();
+    layout();
+},false);
+
+var canvas = document.getElementById('canvas');
+
+canvas.width = 1000;
+canvas.height = 1000;
+var context = canvas.getContext('2d');
+context.clearRect(0, 0, canvas.width, canvas.height);
+context.fillStyle = "white";  
+context.fillRect(0,0, canvas.width, canvas.height);
+
+	
+// Temporary mimicking React component structure until I figure out a better way:
+var FakeReactComponent = function() {
+	this.state = { point:{xxx:100, yyy:100} };
+};
+FakeReactComponent.prototype = Hypermatic;
+
+FakeReactComponent.prototype.setState = function(newState) {
+	var oldState = this.state;
+	
+	var keys = Object.keys(newState);
+	keys.forEach(function(key) {
+		if (key === "point") {
+			var oldPoint = oldState.point;
+			var newPoint = newState.point;
+
+			var context = canvas.getContext('2d');
+			
+			context.save();
+			
+			context.strokeStyle = "gray";
+			var oldX = oldPoint.xxx;
+			var oldY = oldPoint.yyy;
+			var newX = newPoint.xxx;
+			var newY = newPoint.yyy;
+	
+			var finalOldX = Math.round(oldX + 200);
+			var finalOldY = Math.round(oldY + 200);
+			var finalNewX = Math.round(newX + 200);
+			var finalNewY = Math.round(newY + 200);
+			context.beginPath();
+			context.moveTo(finalOldX,finalOldY);
+			context.lineTo(finalNewX,finalNewY);
+			
+			context.stroke();
+			context.closePath();
+			context.restore();
+		}
+		oldState[key] = newState[key];
+  	});
+}
+FakeReactComponent.prototype.hyperAnimationForKey = function(key) {
+	return {duration : 1};
+};
+var component = new FakeReactComponent();
+                      
+</script>
+
+
+</body>
+</html>
