@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>relativeLayout</title>
+<meta charset="utf-8">
+<style>
+* {
+	padding:0;
+	margin:0;
+}
+div {
+    position: absolute;
+}
+
+#blue {
+	background-color:blue;
+	width: 300px;
+	height: 300px;
+}
+#green {
+	background-color:green;
+	width: 200px;
+	height: 200px;
+}
+#orange {
+	background-color:orange;
+	width: 100px;
+	height: 100px;
+}
+#purple {
+	background-color:purple;
+	width: 100px;
+	height: 100px;
+}
+
+.one #blue {
+	transform: translate3d(0px,0px,0);
+}
+.one #green {
+	transform: translate3d(300px,300px,0);
+}
+.one #orange {
+	transform: translate3d(0px,400px,0);
+}
+.one #purple {
+	transform: translate3d(400px,0px,0);
+}
+
+.two #blue {
+	transform: translate3d(400px,400px,0);
+}
+.two #green {
+	transform: translate3d(100px,100px,0);
+}
+.two #orange {
+	transform: translate3d(0px,0px,0);
+}
+.two #purple {
+	transform: translate3d(300px,300px,0);
+}
+
+</style>
+</head>
+<body class="one">
+
+<input type="button" value="toggle" onclick = "toggle();">
+
+<div id="blue"></div>
+<div id="green"></div>	
+<div id="orange"></div>	
+<div id="purple"></div>	
+
+<script type="text/javascript" src="https://rawgit.com/KevinDoughty/Hypermatic/74c0e0d7b36380897f143d8a1906cf605eff98dd/hypermatic.js"></script>
+<script type="text/javascript">
+
+var blue = document.getElementById("blue");
+var green = document.getElementById("green");
+var orange = document.getElementById("orange");
+var purple = document.getElementById("purple");
+
+var shiftKeyPressed = false;
+function toggleShiftKey(e) {
+	shiftKeyPressed = e.shiftKey;
+}
+function animationDuration() {
+	return (shiftKeyPressed) ? 2.5 : .25;
+}
+
+var easing = "cubic-bezier(.5,0,.5,1)";
+var toggled = false;
+var toggle = function() {
+	
+	toggled = !toggled;
+	
+	if (toggled) document.body.className = "two";
+	else document.body.className = "one";
+
+	if (toggled) {
+			
+		blue.hyperAnimate({
+			type : "chain",
+			children: [
+				{
+					type: "transform",
+					from: "translate3d(0,0,0)",
+					to: "translate3d(400px,0,0)",
+					duration : animationDuration() * 3,
+					easing: easing,
+					delay : animationDuration(),
+				},
+				{
+					type: "transform",
+					from: "translate3d(400px,0,0)",
+					to: "translate3d(400px,400px,0)",
+					duration : animationDuration() * 3,
+					easing: easing,
+					
+				}
+			]
+		});
+		purple.hyperAnimate({
+			type : "chain",
+			children: [
+				{
+					type: "transform",
+					from: "translate3d(400px,0,0)",
+					to: "translate3d(400px,300px,0)",
+					duration : animationDuration(),
+					easing: easing,
+					delay : animationDuration(),
+				},
+				{
+					type: "transform",
+					from: "translate3d(400px,300px,0)",
+					to: "translate3d(300px,300px,0)",
+					duration : animationDuration(),
+					easing: easing,
+					
+				}
+			]
+		});
+		green.hyperAnimate({
+			type : "chain",
+			children: [
+				{
+					type: "transform",
+					from: "translate3d(300px,300px,0)",
+					to: "translate3d(100px,300px,0)",
+					duration : animationDuration() * 2,
+					easing: easing,
+				},
+				{ // temporary workaround for lack of delay in anything other than first child animation:
+					type: "transform",
+					from: "translate3d(100px,300px,0)",
+					to: "translate3d(100px,300px,0)",
+					duration : animationDuration(),
+					easing: easing,
+				},
+				{
+					type: "transform",
+					from: "translate3d(100px,300px,0)",
+					to: "translate3d(100px,100px,0)",
+					duration : animationDuration() * 2,
+					easing: easing,
+					
+				}
+			]
+		});
+		orange.hyperAnimate({
+			type : "chain",
+			children: [
+				{
+					type: "transform",
+					from: "translate3d(0,400px,0)",
+					to: "translate3d(0,300px,0)",
+					duration : animationDuration(),
+					easing: easing,
+				},
+				{ // temporary workaround for lack of delay in anything other than first child animation:
+					type: "transform",
+					from: "translate3d(0,300px,0)",
+					to: "translate3d(0,300px,0)",
+					duration : animationDuration(),
+					easing: easing,
+				},
+				{
+					type: "transform",
+					from: "translate3d(0,300px,0)",
+					to: "translate3d(0,0,0)",
+					duration : animationDuration(),
+					easing: easing,
+				}
+			]
+		});
+	
+	} else {	
+	
+		blue.hyperAnimate({
+			type : "chain",
+			children: [
+				{
+					type: "transform",
+					from: "translate3d(400px,400px,0)",
+					to: "translate3d(0,400px,0)",
+					duration : animationDuration() * 3,
+					easing: easing,
+				},
+				{ // temporary workaround for lack of delay in anything other than first child animation:
+					type: "transform",
+					from: "translate3d(0,400px,0)",
+					to: "translate3d(0,400px,0)",
+					duration : animationDuration(),
+					easing: easing,
+				},
+				{
+					type: "transform",
+					from: "translate3d(0,400px,0)",
+					to: "translate3d(0,0,0)",
+					duration : animationDuration() * 3,
+					easing: easing,
+					
+				}
+			]
+		});
+		purple.hyperAnimate({
+			type : "chain",
+			children: [
+				{
+					type: "transform",
+					from: "translate3d(300px,300px,0)",
+					to: "translate3d(100px,300px,0)",
+					duration : animationDuration(),
+					easing: easing,
+				},
+				{
+					type: "transform",
+					from: "translate3d(100px,300px,0)",
+					to: "translate3d(100px,0,0)",
+					duration : animationDuration(),
+					easing: easing,
+				},
+				{ // temporary workaround for lack of delay in anything other than first child animation:
+					type: "transform",
+					from: "translate3d(100px,0,0)",
+					to: "translate3d(100px,0,0)",
+					duration : animationDuration(),
+					easing: easing,
+				},
+				{
+					type: "transform",
+					from: "translate3d(100px,0,0)",
+					to: "translate3d(400px,0,0)",
+					duration : animationDuration(),
+					easing: easing,
+				}
+			]
+		});
+		green.hyperAnimate({
+			type : "chain",
+			children: [
+				{
+					type: "transform",
+					from: "translate3d(100px,100px,0)",
+					to: "translate3d(300px,100px,0)",
+					duration : animationDuration() * 2,
+					easing: easing,
+				},
+				{
+					type: "transform",
+					from: "translate3d(300px,100px,0)",
+					to: "translate3d(300px,300px,0)",
+					duration : animationDuration() * 2,
+					easing: easing,
+				}
+			]
+		});
+		orange.hyperAnimate({
+			type : "chain",
+			children: [
+				{
+					type: "transform",
+					from: "translate3d(0,0,0)",
+					to: "translate3d(200px,0,0)",
+					duration : animationDuration(),
+					easing: easing,
+				},
+				{ // temporary workaround for lack of delay in anything other than first child animation:
+					type: "transform",
+					from: "translate3d(200px,0,0)",
+					to: "translate3d(200px,0,0)",
+					duration : animationDuration(),
+					easing: easing,
+				},
+				{
+					type: "transform",
+					from: "translate3d(200px,0,0)",
+					to: "translate3d(200px,200px,0)",
+					duration : animationDuration(),
+					easing: easing,
+				},
+				{ // temporary workaround for lack of delay in anything other than first child animation:
+					type: "transform",
+					from: "translate3d(200px,200px,0)",
+					to: "translate3d(200px,200px,0)",
+					duration : animationDuration(),
+					easing: easing,
+				},
+				{
+					type: "transform",
+					from: "translate3d(200px,200px,0)",
+					to: "translate3d(500px,200px,0)",
+					duration : animationDuration(),
+					easing: easing,
+				},
+				{
+					type: "transform",
+					from: "translate3d(500px,200px,0)",
+					to: "translate3d(500px,500px,0)",
+					duration : animationDuration(),
+					easing: easing,
+				},
+				{
+					type: "transform",
+					from: "translate3d(500px,500px,0)",
+					to: "translate3d(0,500px,0)",
+					duration : animationDuration(),
+					easing: easing,
+				},
+				{
+					type: "transform",
+					from: "translate3d(0,500px,0)",
+					to: "translate3d(0,400px,0)",
+					duration : animationDuration(),
+					easing: easing,
+				}
+			]
+		});	
+	}
+}
+
+document.addEventListener('keydown',toggleShiftKey,false);
+document.addEventListener('keyup',toggleShiftKey,false);
+         
+</script>
+</body>
+</html>
