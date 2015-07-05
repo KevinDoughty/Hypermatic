@@ -60,7 +60,7 @@ Facebook POP animations are mutable and cannot run off the GPU.
 I have produced many examples showing that the same animation blending can be 
 replicated in a readonly interface that can run off the GPU.
 Also, unlike relative animation, Facebook POP animations cannot blend sequential groups or keyframes.
-Web-Animations will be no different.
+Web-Animations would be no different.
 [https://github.com/facebook/pop/issues/64](https://github.com/facebook/pop/issues/64)
 
 The biggest failure is their resistance to adding a simple property 
@@ -85,7 +85,7 @@ with additional arguments of strings and numbers.
 
 Their `document.timeline.play(animation)` syntax requires the target be specified. 
 This is a vestige of their goal of groups that can animate multiple targets,
-yet requiring a target remains after groups have been deferred to a later version of the spec.
+yet requiring a target remains, even after groups have been deferred to a later version of the spec.
 I should add that cloning a readonly animation is near useless 
 as animations require a target as part of their constructor.
 Animation copying is a critically important technique in relative animation.
