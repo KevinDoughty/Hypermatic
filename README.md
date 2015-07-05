@@ -26,6 +26,7 @@ In the future I hope to implement:
 * A timing model defined by the hierarchy of nested targets. Changing the speed or pausing a player should apply to all descendant DOM nodes.
 * Animation of state and objects that do not inherit from `Node`, which is only partially implemented for React components.
 * A proper spring animation
+* Lots more
 
 One concession the Web-Animations group made for the relative animation pattern
 is in section `5.23 Script execution and live updates to the model`
@@ -41,8 +42,10 @@ The Hypermatic API is vastly different from Web-Animations, but for browsers tha
 this line is fundamental to its performance.
 
 I hope the Web-Animations team will make more concessions.
+Hypermatic is designed with usability first and foremost. 
+It has the potential to offer more than what immutable and forward filling animations ever will.
 
-#### The problems with Web-Animations
+#### The problem with Web-Animations
 
 One of the primary features of Web-Animations as initially envisioned was syncing animations with groups.
 [https://birtles.wordpress.com/2013/07/09/group-and-conquer-timing-groups-for-your-synchronization-woes/](https://birtles.wordpress.com/2013/07/09/group-and-conquer-timing-groups-for-your-synchronization-woes/)
@@ -69,7 +72,7 @@ Perhaps it is "not invented here" syndrome, or perhaps they don't want to credit
 But my requests are dismissed as trivial.
 Indeed, subtraction is trivial, but without this additive animation would not be possible in CSS Transitions.
 The web development world will be stuck with their inferior "to-animations" 
-algorithm that unlike relative animation cannot blend timing functions, keyframes, or sequential animations.
+algorithm that, unlike relative animation, cannot blend timing functions, keyframes, or sequential animations.
 
 Using milliseconds is not a good way to design animations. 
 Web-Animations is in line with the ancient setTimeout syntax,
@@ -98,7 +101,7 @@ which the developer would used to construct an animation.This has plagued me sin
 
 Of course, I would be remiss to not mention that Hypermatic would not be possible without 
 the hard work Web-Animations team, and I am grateful. I couldn't have made this without them.
-I just hope they will correct what are in my opinion glaring oversights.
+I just hope they will correct what are in my opinion the glaring oversights.
 
 #### API Reference
 
