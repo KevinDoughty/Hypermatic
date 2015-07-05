@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>fourWays</title>
+<meta charset="utf-8">
+<style>
+* {
+	padding: 0;
+	margin: 0;
+}
+div {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    left: 50px;
+    top: 50px;
+}
+#blue {
+	background-color: blue;
+}
+#green {
+	background-color: green;
+	top: 150px;
+}
+#orange {
+	background-color: orange;
+	top: 250px;
+}
+#purple {
+	background-color: purple;
+	top: 350px;
+}
+</style>
+</head>
+<body>
+
+<input type="button" value="translate" onclick = "toggleTranslate();">
+<input type="button" value="rotate" onclick = "toggleRotate();">
+
+<div id="blue"></div>
+<div id="green"></div>	
+<div id="orange"></div>	
+<div id="purple"></div>	
+
+<script type="text/javascript" src="relative-animations.js"></script>
+<script type="text/javascript">
+
+var blue = document.getElementById("blue");
+var green = document.getElementById("green");
+var orange = document.getElementById("orange");
+var purple = document.getElementById("purple");
+
+function underlyingRotateAnimation(value) {
+	return {
+		type:"transform",
+		from:"rotate("+value+"deg)",
+		to:"rotate("+value+"deg)",
+		ink:"absolute",
+		index:3,
+		fill:"forwards",
+		composite:"add"
+	}
+}
+function underlyingScaleAnimation(value) {
+	return {
+		type:"transform",
+		from:"scale("+value+")",
+		to:"scale("+value+")",
+		ink:"absolute",
+		index:2,
+		fill:"forwards",
+		composite:"add"
+	}
+}
+function underlyingTranslateAnimation(x,y) {
+	return {
+		type:"transform",
+		from:"translate3d("+x+"px, "+y+"px, 0)",
+		to:"translate3d("+x+"px, "+y+"px, 0)",
+		ink:"absolute",
+		index:1,
+		fill:"forwards",
+		composite:"add"
+	}
+}
+
+var omega = 20;
+var zeta = 0.5;
+
+var oldX = 0;
+var oldY = 0;
+var oldR = 0;
+var oldS = 1;
+
+var translated = false;
+var rotated = false;
+
+
+if (blue) { // added backwards to show animations are properly sorted by index
+	blue.hyperAnimate(underlyingRotateAnimation(0),"underlyingRotate");
+	blue.hyperAnimate(underlyingScaleAnimation(1),"underlyingScale");
+	blue.hyperAnimate(underlyingTranslateAnimation(0,0),"underlyingTranslate");
+}
+
+var shiftKeyPressed = false;
+function toggleShiftKey(e) {
+	shiftKeyPressed = e.shiftKey;
+	
+	if (orange) orange.setHyperDefaultAnimations({ // have to update animation duration
+		transform : {
+			duration: animationDuration(),
+			easing: easing,
+		}
+	});
+}
+function animationDuration() {
+	return (shiftKeyPressed) ? 30.0 : 5;
+}
+
+var easing = function(position) { // This is cheating, callback would not work if run off GPU. TODO: spring animation
+	var beta = Math.sqrt(1.0 - zeta * zeta);
+	var value = 1.0 / beta * Math.exp(-zeta * omega * position) * Math.sin(beta * omega * position + Math.atan(beta / zeta));
+	return 1-value;
+}
+
+if (orange) orange.setHyperDefaultAnimations({
+	transform : {
+		duration: animationDuration(),
+		easing: easing,
+	}
+});
+
+function PurpleDelegate() { }
+PurpleDelegate.prototype = {
+	hyperAnimationForKey: function(key) {
+		return {
+			duration: animationDuration(),
+			easing: easing,
+		}
+	}
+}
+purpleDelegate = new PurpleDelegate();
+if (purple) purple.setHyperAnimationDelegate(purpleDelegate);
+
+
+function rotateAndScale(newR,newS) {
+	var duration = animationDuration();
+	
+	if (blue) {
+		blue.hyperAnimate(underlyingRotateAnimation(newR),"underlyingRotate");
+		blue.hyperAnimate(underlyingScaleAnimation(newS),"underlyingScale");
+		blue.hyperAnimate({
+			type:"transform",
+			from:"rotate("+oldR+"deg)",
+			to:"rotate("+newR+"deg)",
+			duration:duration,
+			easing:easing,
+			index:3,
+		});
+		blue.hyperAnimate({
+			type:"transform",
+			from:"scale("+oldS+")",
+			to:"scale("+newS+")",
+			duration:duration,
+			easing:easing,
+			index:2,
+		});
+	}
+	
+	if (green) {
+		green.hyperAnimate({
+			type:"transform",
+			from:"translate3d("+oldX+"px, "+oldY+"px, 0px) scale("+oldS+") rotate("+oldR+"deg)",
+			to:"translate3d("+oldX+"px, "+oldY+"px, 0px) scale("+newS+") rotate("+newR+"deg)",
+			duration:duration,
+			easing:easing,
+		});
+		green.style.transform = "translate3d("+oldX+"px,"+oldY+"px,0) scale("+newS+") rotate("+newR+"deg)";
+	}
+	
+	if (orange) {
+		orange.style.transform = "translate3d("+oldX+"px,"+oldY+"px,0) scale("+newS+") rotate("+newR+"deg)";
+	}
+	
+	if (purple) {
+		purple.style.transform = "translate3d("+oldX+"px,"+oldY+"px,0) scale("+newS+") rotate("+newR+"deg)";
+	}
+}
+
+function translateToPoint(newX,newY) {
+	var duration = animationDuration();
+	
+	if (blue) {
+		blue.hyperAnimate(underlyingTranslateAnimation(newX,newY),"underlyingTranslate");
+		blue.hyperAnimate({
+			type:"transform",
+			from:"translate3d("+oldX+"px, "+oldY+"px, 0px)",
+			to:"translate3d("+newX+"px, "+newY+"px, 0px)",
+			duration:duration,
+			easing:easing,
+			index:1,
+		});	
+	}
+
+	if (green) {
+		green.hyperAnimate({
+			type:"transform",
+			from:"translate3d("+oldX+"px, "+oldY+"px, 0px) scale("+oldS+") rotate("+oldR+"deg)",
+			to:"translate3d("+newX+"px, "+newY+"px, 0px) scale("+oldS+") rotate("+oldR+"deg)",
+			duration:duration,
+			easing:easing,
+		});	
+		green.style.transform = "translate3d("+newX+"px,"+newY+"px,0) scale("+oldS+") rotate("+oldR+"deg)";
+	}
+
+	if (orange) {
+		orange.style.transform = "translate3d("+newX+"px,"+newY+"px,0) scale("+oldS+") rotate("+oldR+"deg)";
+	}
+	
+	if (purple) {
+		purple.style.transform = "translate3d("+newX+"px,"+newY+"px,0) scale("+oldS+") rotate("+oldR+"deg)";
+	}
+}
+
+var toggleTranslate = function() {
+	translated = !translated;
+	var newX = 0;
+	if (translated) newX = 200;
+	translateToPoint(newX,0);
+	oldX = newX;
+}
+var toggleRotate = function() {
+	rotated = !rotated;
+	var newR = 0;
+	var newS = 1;
+	if (rotated) {
+		newR = 180;
+		newS = 1.5;
+	}
+	rotateAndScale(newR,newS);
+	oldR = newR;
+	oldS = newS;
+}
+
+document.addEventListener('keydown',toggleShiftKey,false);
+document.addEventListener('keyup',toggleShiftKey,false);
+ 
+</script>
+</body>
+</html>

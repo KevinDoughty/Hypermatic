@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>relativeFloat</title>
+<meta charset="utf-8">
+<style>
+* {
+	padding:0;
+	margin:0;
+}
+ul {
+	position:relative;
+    float:left;
+	background: -webkit-linear-gradient( 0deg, white, darkgray );
+    background: -moz-linear-gradient( 0deg, white, darkgray ); 
+    background: -ms-linear-gradient( 0deg, white, darkgray );
+    background: -o-linear-gradient( 0deg, white, darkgray );
+    background: linear-gradient( 0deg, white, darkgray );
+}	
+li {
+	list-style-type:none;
+	width: 32px;
+    height: 32px;
+    opacity:0.5;
+    position:relative;
+    float:left;
+    margin: 1px;
+}
+</style>
+</head>
+<body>
+
+<ul id="container">
+
+<li /><li /><li /><li />
+<li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li />
+
+<li /><li /><li /><li />
+<li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li />
+
+<li /><li /><li /><li />
+<li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li />
+
+<li /><li /><li /><li />
+<li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li />
+<li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li /><li />
+
+</ul>
+
+<script type="text/javascript" src="relative-animations.js"></script>
+<script type="text/javascript">
+
+// Hypermatic animation by Kevin Doughty http://kxdx.org using https://github.com/KevinDoughty/Hypermatic/
+
+var duration = 1.5;
+var omega = 10.0;
+var zeta = 0.75;
+
+var bodyWidth = document.body.offsetWidth || 1;
+var containerWidth = bodyWidth * 0.8553971486761711;
+var oldRatio = containerWidth / bodyWidth;
+
+var shiftKeyPressed = false;
+function toggleShiftKey(e) {
+	shiftKeyPressed = e.shiftKey;
+}
+
+function rainbowHSL(n) { // n between 0 and 1
+	return 'hsl(' + (n*360) + ',100%,50%)';
+}
+
+function docDown(e) {
+	containerResize(e.clientX);
+    document.addEventListener('mousemove', docDrag, false);
+    e.stopPropagation()
+	e.preventDefault()
+}
+function docUp(e) {
+	document.removeEventListener('mousemove', docDrag);
+	e.stopPropagation()
+	e.preventDefault()
+}
+function docDrag(e) {
+	containerResize(e.clientX);
+	e.stopPropagation()
+	e.preventDefault()
+}
+function containerResize(x) {
+	var w = document.body.offsetWidth;
+	if (x < 1) x = 1;
+	if (x > w) x = w;
+	container.style.width = x + 'px';
+	oldRatio = x / w;
+    layout(duration * ((shiftKeyPressed) ? 10 : 1));
+}
+
+function windowResize(e) {
+	container.style.width = (document.body.offsetWidth * oldRatio) + 'px';
+	layout(duration * ((shiftKeyPressed) ? 10 : 1));
+}
+
+var container = document.getElementById('container');
+var elements = document.querySelectorAll('li');
+var length = elements.length;
+var x = [];
+var y = [];
+
+function layout(theDuration) {
+	for (var i=0; i<length; i++) {
+		var oldX = x[i];
+		var oldY = y[i];
+		x[i] = elements[i].offsetLeft;
+		y[i] = elements[i].offsetTop;
+		if ((oldX || oldX === 0) && (oldY || oldY === 0) && (oldX != x[i] || oldY != y[i])) {
+			elements[i].hyperAnimate({
+				type:"transform",
+				from:"translate3d("+oldX+"px, "+oldY+"px, 0px)",
+				to:"translate3d("+x[i]+"px, "+y[i]+"px, 0px)",
+				duration:theDuration,
+				fill:"backwards",
+				easing:function(position) {
+					position = 1 - Math.cos( position * Math.PI / 2 );
+					var beta = Math.sqrt(1.0 - zeta * zeta);
+					position = 1.0 / beta * Math.exp(-zeta * omega * position) * Math.sin(beta * omega * position + Math.atan(beta / zeta));
+					return 1-position;
+				}
+			});
+		}
+	}
+}
+
+container.style.width = containerWidth + 'px';
+for (var i = 0; i < length; i++) {
+	elements[i].style.backgroundColor = rainbowHSL(i/length);
+}
+layout(0);
+
+document.addEventListener('mousedown', docDown, false);  
+document.addEventListener('mouseup', docUp, false);
+window.addEventListener('resize',windowResize, false); 
+document.addEventListener('keydown',toggleShiftKey,false);
+document.addEventListener('keyup',toggleShiftKey,false);
+  
+</script>
+</html>

@@ -9,7 +9,6 @@ html, body {
 	height: 100%;
 	overflow: hidden;
 }
-
 #element {
     width: 20px;
     height: 20px;
@@ -49,7 +48,6 @@ function makeStarChain(start) {
 	}
 	return {type : "chain", children:star};
 	return new HyperAnimationChain({children:star});
-
 }
 
 function makeStarChainSegment(segment) {
@@ -70,7 +68,7 @@ function makeStarChainSegment(segment) {
 		to : "translate3d("+(toX)+"px,"+(toY)+"px,0) rotate("+r+"deg)",
 		duration : 0.25,
 		easing : "cubic-bezier(.5,0,.5,1)",
-	 };
+	};
 }
 
 
@@ -86,7 +84,6 @@ function makeDrawingChainSegment(segment) {
 	var toX = Number( Math.cos(toTheta) * radius ).toFixed(4);
 	var toY = Number( Math.sin(toTheta) * radius ).toFixed(4);
 	var r = fromTheta * (180/Math.PI);
-	//console.log("translate3d("+(toX)+"px,"+(toY)+"px,0) rotate("+r+"deg)");
 	return { 
 		type : "point",
 		from : {xxx:fromX, yyy:fromY},
@@ -106,24 +103,6 @@ function makeDrawingChain(start) {
 	return new HyperAnimationChain({children:star});
 }
 
-
-
-var rocketDuration = 2.5;
-var planetDuration = 1;
-
-var planetCounter = 0;
-var chainCounter = 0;
-
-
-var ticks = 5;
-var tick = 0;
-
-var perfect = "cubic-bezier(.5,0,.5,1)";
-var easeIn = "cubic-bezier(0.5,0,1,1)";
-var crazyEaseIn = "cubic-bezier(1,0,1,1)";
-var crazyEaseOut = "cubic-bezier(0,1,1,1)";
-
-		
 function layout() {
 	if (element) {
 		element.hyperAnimate(makeStarChain(chainCounter));
@@ -132,14 +111,12 @@ function layout() {
 	}
 }
 
-document.addEventListener('mousedown', function(e){
-	e.stopPropagation();
-	e.preventDefault();
-    layout();
-},false);
+var chainCounter = 0;
+var ticks = 5;
+var tick = 0;
+
 
 var canvas = document.getElementById('canvas');
-
 canvas.width = 1000;
 canvas.height = 1000;
 var context = canvas.getContext('2d');
@@ -148,7 +125,7 @@ context.fillStyle = "white";
 context.fillRect(0,0, canvas.width, canvas.height);
 
 	
-// Temporary mimicking React component structure until I figure out a better way:
+// Temporarily mimicking React component structure until I figure out a better way:
 var FakeReactComponent = function() {
 	this.state = { point:{xxx:100, yyy:100} };
 };
@@ -192,7 +169,13 @@ FakeReactComponent.prototype.hyperAnimationForKey = function(key) {
 	return {duration : 1};
 };
 var component = new FakeReactComponent();
-                      
+    
+    
+document.addEventListener('mousedown', function(e){
+	e.stopPropagation();
+	e.preventDefault();
+    layout();
+},false);                  
 </script>
 
 

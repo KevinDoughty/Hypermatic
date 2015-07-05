@@ -51,7 +51,7 @@ var rocket2 = document.getElementById("rocket2");
 var planet = document.getElementById("planet");
 
 
-function easing(position) {
+function easing(position) { // This is cheating, callback would not work if run off GPU. TODO: spring animation
 	var zeta = 0.5;
 	var omega = 20;
 	var beta = Math.sqrt(1.0 - zeta * zeta);
