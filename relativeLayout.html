@@ -63,8 +63,6 @@ div {
 </head>
 <body class="one">
 
-<input type="button" value="toggle" onclick = "toggle();">
-
 <div id="blue"></div>
 <div id="green"></div>	
 <div id="orange"></div>	
@@ -340,7 +338,12 @@ var toggle = function() {
 
 document.addEventListener('keydown',toggleShiftKey,false);
 document.addEventListener('keyup',toggleShiftKey,false);
-         
+document.addEventListener('mousedown', function(e){
+	e.stopPropagation();
+	e.preventDefault();
+    toggle();
+},false); 
+      
 </script>
 </body>
 </html>
