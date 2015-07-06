@@ -124,7 +124,7 @@ function layout() {
 			settings.startTime = settings.startTime + planetDuration;
 			planet.hyperAnimate(settings,"planetLinear"+(counter++));
 		} else {
-			var anim = planet.hyperAnimate({
+			planet.hyperAnimate({
 				type:"transform",
 				duration:planetDuration,
 				easing: easing,
@@ -137,7 +137,7 @@ function layout() {
 }
 
 if (rocket1) rocket1.style.transform = "translate3d(0,0,0) rotate(135deg)";
-if (rocket2) rocket2.style.transform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)";// scale(1,1)"; // must come after hyperAnimate else the dread flickor
+if (rocket2) rocket2.style.transform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)";
 
 document.addEventListener('mousedown', function(e){
 	e.stopPropagation();
