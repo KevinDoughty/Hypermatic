@@ -52,15 +52,6 @@ var rocket1 = document.getElementById("rocket1");
 var rocket2 = document.getElementById("rocket2");
 var planet = document.getElementById("planet");
 
-
-function easing(position) { // This is cheating, callback would not work if run off GPU. TODO: spring animation
-	var zeta = 0.5;
-	var omega = 20;
-	var beta = Math.sqrt(1.0 - zeta * zeta);
-	var value = 1.0 / beta * Math.exp(-zeta * omega * position) * Math.sin(beta * omega * position + Math.atan(beta / zeta));
-	return 1-value;
-}
-
 function makeFrame(at,toggled) {
 	var radius = 200;
 	var theta;
@@ -89,6 +80,12 @@ var counter = 0;
 var toggled = false;
 var ticks = 5;
 var tick = 0;
+
+
+var perfect = "cubic-bezier(.5,0,.5,1)";
+var crazyEaseIn = "cubic-bezier(1,0,1,1)";
+var crazyEaseOut = "cubic-bezier(0,1,1,1)";
+
 
 function layout() {
 	toggled = !toggled;
@@ -121,24 +118,39 @@ function layout() {
 		var animation = planet.hyperAnimationNamed("planetLinear"+(counter-1)); // duration must be constant or this won't work
 		if (animation) {
 			var settings = animation.settings;
-			settings.startTime = settings.startTime + planetDuration;
+			//settings.startTime = settings.startTime + planetDuration;
+			settings.startTime = settings.startTime + rocketDuration;
 			planet.hyperAnimate(settings,"planetLinear"+(counter++));
 		} else {
 			planet.hyperAnimate({
 				type:"transform",
-				duration:planetDuration,
-				easing: easing,
-				from: "rotate(-72deg)",
+				//duration:planetDuration,
+				duration:rocketDuration,
+				easing: perfect,//"easeIn",
+				//from: "rotate(-72deg)",
+				from: "rotate(180deg)",
 				to: "rotate(0deg)",
 			},"planetLinear"+(counter++));
 		}
-		planet.style.transform = "rotate(" + (72 * (((tick++)%ticks) + 1)) +"deg)";
+		//planet.style.transform = "rotate(" + (72 * (((tick++)%ticks) + 1)) +"deg)";
+		if (toggled) planet.style.transform = "rotate(270deg)";
+		else planet.style.transform = "rotate(90deg)";
 	}
 }
 
 if (rocket1) rocket1.style.transform = "translate3d(0,0,0) rotate(135deg)";
 if (rocket2) rocket2.style.transform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)";
-
+if (planet) planet.style.transform = "rotate(90deg)";
+if (false) {
+	planet.hyperAnimate({
+		type:"transform",
+		duration:planetDuration * 5,
+		iterations:99999999,
+		easing: "linear",
+		from: "rotate(-360deg)",
+		to: "rotate(0deg)",
+	},"planetRotate");
+}
 document.addEventListener('mousedown', function(e){
 	e.stopPropagation();
 	e.preventDefault();
