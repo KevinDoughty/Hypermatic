@@ -47,10 +47,25 @@ html, body {
 'use strict';
 // Relative animation by Kevin Doughty http://kxdx.org using https://github.com/KevinDoughty/Hypermatic/
 
+var duration = 2.5;
+
+var counter = 0;
+var toggled = false;
+var perfect = "cubic-bezier(.5,0,.5,1)";
 
 var rocket1 = document.getElementById("rocket1");
 var rocket2 = document.getElementById("rocket2");
 var planet = document.getElementById("planet");
+
+if (rocket1) rocket1.style.transform = "translate3d(0,0,0) rotate(135deg)";
+if (rocket2) rocket2.style.transform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)";
+if (planet) planet.style.transform = "rotate(90deg)";
+
+document.addEventListener('mousedown', function(e){
+	e.stopPropagation();
+	e.preventDefault();
+    layout();
+},false);
 
 function makeFrame(at,toggled) {
 	var radius = 200;
@@ -72,14 +87,6 @@ function makeFrames(toggled) {
 	}
 	return frames;
 }
-
-var duration = 2.5;
-
-var counter = 0;
-var toggled = false;
-
-
-var perfect = "cubic-bezier(.5,0,.5,1)";
 
 function layout() {
 	toggled = !toggled;
@@ -108,36 +115,25 @@ function layout() {
 		else rocket2.style.transform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
 	}
 	
-	if (planet) { // queued, longer duration
-		var animation = planet.hyperAnimationNamed("planetLinear"+(counter-1)); // duration must be constant or this won't work
-		if (animation) {
+	if (planet) { // queued, total duration is longer
+		var animation = planet.hyperAnimationNamed("planetRotation"+(counter-1)); // get the previous animation
+		if (animation) { // add a duplicate animation that starts when the previous one ends
 			var settings = animation.settings;
 			settings.startTime = settings.startTime + duration;
-			planet.hyperAnimate(settings,"planetLinear"+(counter++));
-		} else {
+			planet.hyperAnimate(settings,"planetRotation"+(counter++));
+		} else { // create the first planet rotation animation
 			planet.hyperAnimate({
 				type:"transform",
 				duration:duration,
 				easing: perfect,
 				from: "rotate(180deg)",
 				to: "rotate(0deg)",
-			},"planetLinear"+(counter++));
+			},"planetRotation"+(counter++)); // animation name is optional second argument, if you need access to the animation later
 		}
 		if (toggled) planet.style.transform = "rotate(270deg)";
 		else planet.style.transform = "rotate(90deg)";
 	}
 }
-
-if (rocket1) rocket1.style.transform = "translate3d(0,0,0) rotate(135deg)";
-if (rocket2) rocket2.style.transform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)";
-if (planet) planet.style.transform = "rotate(90deg)";
-
-document.addEventListener('mousedown', function(e){
-	e.stopPropagation();
-	e.preventDefault();
-    layout();
-},false);
-
                       
 </script>
 
