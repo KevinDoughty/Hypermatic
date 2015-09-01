@@ -51,7 +51,7 @@ var duration = 2.5;
 
 var counter = 0;
 var toggled = false;
-var perfect = "cubic-bezier(.5,0,.5,1)";
+var perfect = "cubic-bezier(.5,0,.5,1)"; // default easing
 
 var rocket1 = document.getElementById("rocket1");
 var rocket2 = document.getElementById("rocket2");
@@ -67,7 +67,7 @@ document.addEventListener('mousedown', function(e){
     layout();
 },false);
 
-function makeFrame(at,toggled) {
+function makeFrame(at,toggled) { // animations are additive but you specify values as you would normally
 	var radius = 200;
 	var theta;
 	if (toggled) theta = (1 - at) * Math.PI * 1;
@@ -91,31 +91,31 @@ function makeFrames(toggled) {
 function layout() {
 	toggled = !toggled;
 	
-	if (rocket1) { // shorter path
-		var frames = makeFrames(toggled); // keyframes automatically converted to relative values with default ink:"relative"
+	if (rocket1) { // shorter path (result of additive blending)
+		var frames = makeFrames(toggled); 
 		rocket1.hyperAnimate({
-			frames:frames,
+			frames:frames, // keyframes are automatically converted to relative values with default ink:"relative", to use values unmodified you must specify ink:"absolute"
 			duration:duration,
-			easing: perfect,
-			index : -1,
+			//easing: "cubic-bezier(.5,0,.5,1)", // default
+			//index : -1,
 		});
 		if (toggled) rocket1.style.transform = "translate3d(400px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
 		else rocket1.style.transform = "translate3d(0,0,0) rotate(135deg)";// must come after hyperAnimate else the dread flickor
 	}
 	
-	if (rocket2) { // accelerates
+	if (rocket2) { // accelerates (result of additive blending)
 		rocket2.hyperAnimate({
 			type:"transform",
+			duration:duration,
+			//easing: "cubic-bezier(.5,0,.5,1)", // default
 			from: "rotate(180deg) translate3d(0,0,0) rotate(0deg)", // have to specify all three values, even though we just rotate, because of the way adding works. No index will push below inline style so can't have separate animations per transform function.
 			to: "rotate(0deg) translate3d(0,0,0) rotate(0deg)", // have to specify all three values, even though we just rotate, because of the way adding works. No index will push below inline style so can't have separate animations per transform function.
-			duration:duration,
-			easing: perfect,
 		});
 		if (toggled) rocket2.style.transform = "rotate(180deg) translate3d(200px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
 		else rocket2.style.transform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
 	}
 	
-	if (planet) { // queued, total duration is longer
+	if (planet) { // queued, total duration is longer (animations are not interrupted)
 		var animation = planet.hyperAnimationNamed("planetRotation"+(counter-1)); // get the previous animation
 		if (animation) { // add a duplicate animation that starts when the previous one ends
 			var settings = animation.settings;
@@ -125,10 +125,10 @@ function layout() {
 			planet.hyperAnimate({
 				type:"transform",
 				duration:duration,
-				easing: perfect,
+				//easing: "cubic-bezier(.5,0,.5,1)", // default
 				from: "rotate(180deg)",
 				to: "rotate(0deg)",
-			},"planetRotation"+(counter++)); // animation name is optional second argument, if you need access to the animation later
+			},"planetRotation"+(counter++)); // animation name is optional second argument, if you need access to it later
 		}
 		if (toggled) planet.style.transform = "rotate(270deg)";
 		else planet.style.transform = "rotate(90deg)";
