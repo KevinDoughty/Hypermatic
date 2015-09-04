@@ -6004,19 +6004,21 @@ var kxdxImplicitAnimation = function (property,target,value,previous,presentatio
 	var implicitAnimation; // TODO: must enforce HyperAnimation not WebAnimation !!!!!
 	//console.log("kxdxImplicit property:%s; target:%s; value:%s; previous:%s; presentation:%s; zero:%s;",property,target,value,previous,presentation,zero);
 	//kxdxImplicit property:webkitTransform; target:div#orange; value:translate3d(200px,0px,0) scale(1) rotate(0deg); previous:; presentation:; zero:;
+	var unprefixedProperty = property;
+	if (property === features.transformProperty) unprefixedProperty = "transform";
 	if (!previous && previous !==0) previous = zero;
 	if (!presentation && presentation !== 0) presentation = previous;
 				
 	if (isCustomObject(target)) { // React component is own delegate, maybe reconsider
-		if (isFunction(target.hyperAnimationForKey)) implicitAnimation = target.hyperAnimationForKey(property,target,value,previous,presentation,zero);
+		if (isFunction(target.hyperAnimationForKey)) implicitAnimation = target.hyperAnimationForKey(unprefixedProperty,target,value,previous,presentation,zero);
 	} else if (target.hyperAnimationDelegate() && isFunction(target.hyperAnimationDelegate().hyperAnimationForKey)) {
-		implicitAnimation = target.hyperAnimationDelegate().hyperAnimationForKey(property,target,value,previous,presentation,zero);
+		implicitAnimation = target.hyperAnimationDelegate().hyperAnimationForKey(unprefixedProperty,target,value,previous,presentation,zero);
 	}
 	if (!implicitAnimation && implicitAnimation !== false) {
 		if (isCustomObject(target)) {
 			// TODO: React component hyperDefaultAnimations. Seems redundant if component is its own delegate.
-		} else if (target.hyperDefaultAnimations() && target.hyperDefaultAnimations()[property]) {
-			implicitAnimation = target.hyperDefaultAnimations()[property];
+		} else if (target.hyperDefaultAnimations() && target.hyperDefaultAnimations()[unprefixedProperty]) {
+			implicitAnimation = target.hyperDefaultAnimations()[unprefixedProperty];
 		}
 	}
 	if (implicitAnimation) {
