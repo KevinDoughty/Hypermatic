@@ -38,11 +38,11 @@ div {
 <input type="button" value="rotate" onclick = "toggleRotate();">
 
 <div id="blue"></div>
-<div id="green"></div>	
-<div id="orange"></div>	
-<div id="purple"></div>	
+<div id="green"></div>
+<div id="orange"></div>
+<div id="purple"></div>
 
-<script type="text/javascript" src="https://rawgit.com/KevinDoughty/Hypermatic/74c0e0d7b36380897f143d8a1906cf605eff98dd/hypermatic.js"></script>
+<script type="text/javascript" src="https://cdn.rawgit.com/KevinDoughty/Hypermatic/50f0cb12949c0ae9bf1f5d92ad7722f668d25095/hypermatic.js"></script>
 <script type="text/javascript">
 
 var blue = document.getElementById("blue");
@@ -139,7 +139,7 @@ PurpleDelegate.prototype = {
 		}
 	}
 }
-purpleDelegate = new PurpleDelegate();
+var purpleDelegate = new PurpleDelegate();
 if (purple) purple.setHyperAnimationDelegate(purpleDelegate);
 
 
@@ -176,14 +176,17 @@ function rotateAndScale(newR,newS) {
 			easing:easing,
 		});
 		green.style.transform = "translate3d("+oldX+"px,"+oldY+"px,0) scale("+newS+") rotate("+newR+"deg)";
+		green.style.webkitTransform = "translate3d("+oldX+"px,"+oldY+"px,0) scale("+newS+") rotate("+newR+"deg)";
 	}
 	
 	if (orange) {
 		orange.style.transform = "translate3d("+oldX+"px,"+oldY+"px,0) scale("+newS+") rotate("+newR+"deg)";
+		orange.style.webkitTransform = "translate3d("+oldX+"px,"+oldY+"px,0) scale("+newS+") rotate("+newR+"deg)";
 	}
 	
 	if (purple) {
 		purple.style.transform = "translate3d("+oldX+"px,"+oldY+"px,0) scale("+newS+") rotate("+newR+"deg)";
+		purple.style.webkitTransform = "translate3d("+oldX+"px,"+oldY+"px,0) scale("+newS+") rotate("+newR+"deg)";
 	}
 }
 
@@ -211,14 +214,17 @@ function translateToPoint(newX,newY) {
 			easing:easing,
 		});	
 		green.style.transform = "translate3d("+newX+"px,"+newY+"px,0) scale("+oldS+") rotate("+oldR+"deg)";
+		green.style.webkitTransform = "translate3d("+newX+"px,"+newY+"px,0) scale("+oldS+") rotate("+oldR+"deg)";
 	}
 
 	if (orange) {
 		orange.style.transform = "translate3d("+newX+"px,"+newY+"px,0) scale("+oldS+") rotate("+oldR+"deg)";
+		orange.style.webkitTransform = "translate3d("+newX+"px,"+newY+"px,0) scale("+oldS+") rotate("+oldR+"deg)";
 	}
 	
 	if (purple) {
 		purple.style.transform = "translate3d("+newX+"px,"+newY+"px,0) scale("+oldS+") rotate("+oldR+"deg)";
+		purple.style.webkitTransform = "translate3d("+newX+"px,"+newY+"px,0) scale("+oldS+") rotate("+oldR+"deg)";
 	}
 }
 

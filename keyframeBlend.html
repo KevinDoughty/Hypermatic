@@ -31,7 +31,7 @@ html, body {
 	transform-origin:50% 55%;
 }
 </style>
-<script type="text/javascript" src="https://rawgit.com/KevinDoughty/Hypermatic/74c0e0d7b36380897f143d8a1906cf605eff98dd/hypermatic.js"></script>
+<script type="text/javascript" src="https://rawgit.com/KevinDoughty/Hypermatic/50f0cb12949c0ae9bf1f5d92ad7722f668d25095/hypermatic.js"></script>
 
 </head>
 
@@ -57,9 +57,19 @@ var rocket1 = document.getElementById("rocket1");
 var rocket2 = document.getElementById("rocket2");
 var planet = document.getElementById("planet");
 
-if (rocket1) rocket1.style.transform = "translate3d(0,0,0) rotate(135deg)";
-if (rocket2) rocket2.style.transform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)";
-if (planet) planet.style.transform = "rotate(90deg)";
+if (rocket1) {
+	rocket1.style.transform = "translate3d(0,0,0) rotate(135deg)";
+	rocket1.style.webkitTransform = "translate3d(0,0,0) rotate(135deg)";
+	
+}
+if (rocket2) {
+	rocket2.style.transform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)";
+	rocket2.style.webkitTransform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)";
+}
+if (planet) {
+	planet.style.transform = "rotate(90deg)";
+	planet.style.webkitTransform = "rotate(90deg)";
+}
 
 document.addEventListener('mousedown', function(e){
 	e.stopPropagation();
@@ -97,10 +107,14 @@ function layout() {
 			frames:frames, // keyframes are automatically converted to relative values with default ink:"relative", to use values unmodified you must specify ink:"absolute"
 			duration:duration,
 			//easing: "cubic-bezier(.5,0,.5,1)", // default
-			//index : -1,
 		});
-		if (toggled) rocket1.style.transform = "translate3d(400px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
-		else rocket1.style.transform = "translate3d(0,0,0) rotate(135deg)";// must come after hyperAnimate else the dread flickor
+		if (toggled) {
+			rocket1.style.transform = "translate3d(400px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
+			rocket1.style.webkitTransform = "translate3d(400px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
+		} else {
+			rocket1.style.transform = "translate3d(0,0,0) rotate(135deg)";// must come after hyperAnimate else the dread flickor
+			rocket1.style.webkitTransform = "translate3d(0,0,0) rotate(135deg)";// must come after hyperAnimate else the dread flickor
+		}
 	}
 	
 	if (rocket2) { // accelerates (result of additive blending)
@@ -111,8 +125,13 @@ function layout() {
 			from: "rotate(180deg) translate3d(0,0,0) rotate(0deg)", // have to specify all three values, even though we just rotate, because of the way adding works. No index will push below inline style so can't have separate animations per transform function.
 			to: "rotate(0deg) translate3d(0,0,0) rotate(0deg)", // have to specify all three values, even though we just rotate, because of the way adding works. No index will push below inline style so can't have separate animations per transform function.
 		});
-		if (toggled) rocket2.style.transform = "rotate(180deg) translate3d(200px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
-		else rocket2.style.transform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
+		if (toggled) {
+			rocket2.style.transform = "rotate(180deg) translate3d(200px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
+			rocket2.style.webkitTransform = "rotate(180deg) translate3d(200px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
+		} else {
+			rocket2.style.transform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
+			rocket2.style.webkitTransform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
+		}
 	}
 	
 	if (planet) { // queued, total duration is longer (animations are not interrupted)
@@ -130,8 +149,13 @@ function layout() {
 				to: "rotate(0deg)",
 			},"planetRotation"+(counter++)); // animation name is optional second argument, if you need access to it later
 		}
-		if (toggled) planet.style.transform = "rotate(270deg)";
-		else planet.style.transform = "rotate(90deg)";
+		if (toggled) {
+			planet.style.transform = "rotate(270deg)";
+			planet.style.webkitTransform = "rotate(270deg)";
+		} else {
+			planet.style.transform = "rotate(90deg)";
+			planet.style.webkitTransform = "rotate(90deg)";
+		}
 	}
 }
                       
