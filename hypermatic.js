@@ -4655,6 +4655,8 @@ var propertyTypes = {
 	textShadow: shadowType,
 	top: percentLengthAutoType,
 	transform: transformType,
+	webkitTransform: transformType, // temporary
+	msTransform: transformType, // temporary
 	
 	verticalAlign: typeWithKeywords([
 		'baseline',
@@ -5172,10 +5174,10 @@ CompositedPropertyMap.prototype = {
 					if (isDefinedAndNotNull(inline) && inline.length) computedProperty = inline;
 					else {
 						var matrixRegex = /^matrix/; // why does Chrome getComputedStyle with rotate(-180deg) give a matrix with scientific notation? Must convert.
-					if (matrixRegex.test(computedProperty)) { // matrix(-1, 1.22464679914735e-16, -1.22464679914735e-16, -1, 0, 0) // why does Chrome getComputedStyle with rotate(-180deg) give a matrix with scientific notation? Must convert.
-						var scientificNotationRegex = /-?\d*\.?\d+e-\d+\s*,/g; // TODO: This assumes all scientific notation values are small, not large. Large values are probably error and would not give visible results, but they should still not break like this.
-						computedProperty = computedProperty.replace(scientificNotationRegex,"0, ");
-					}
+						if (matrixRegex.test(computedProperty)) { // matrix(-1, 1.22464679914735e-16, -1.22464679914735e-16, -1, 0, 0) // why does Chrome getComputedStyle with rotate(-180deg) give a matrix with scientific notation? Must convert.
+							var scientificNotationRegex = /-?\d*\.?\d+e-\d+\s*,/g; // TODO: This assumes all scientific notation values are small, not large. Large values are probably error and would not give visible results, but they should still not break like this.
+							computedProperty = computedProperty.replace(scientificNotationRegex,"0, ");
+						}
 					}
 				}
 				cssValue = computedProperty;
@@ -6028,7 +6030,7 @@ var kxdxImplicitAnimation = function (property,target,value,previous,presentatio
 function HYPERMATIC() {}
 function hypermatic(dict, key) {
 	
-	if (!isCustomObject) ensureTargetCSSInitialised(this);
+	if (!isCustomObject(this)) ensureTargetCSSInitialised(this);
 	
 	var animation = kxdxAnimationFromDescription(dict);
 	

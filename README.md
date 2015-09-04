@@ -13,7 +13,7 @@ Some of the major differences include:
 
 * The mutable interface has been removed. Animations are immutable and are accessed by name.
 * The syntax has been simplified significantly from Web-Animations.
-* Animations do not require a reference to the animated target.
+* Animations do not require a reference to the animated target and are instead added to it.
 * Effect and timing objects have been abstracted out.
 * Players are owned by animated targets like DOM nodes, not a player per animation.
 * Animation duration is in seconds, not milliseconds.
@@ -25,8 +25,8 @@ In the future I hope to implement:
 
 * A timing model defined by the hierarchy of nested targets. Changing the speed or pausing a player should apply to all descendant DOM nodes.
 * Animation of state and objects that do not inherit from `Node`, which is only partially implemented for React components.
-* A proper spring animation
-* Lots more
+* A proper spring animation.
+* Lots more!
 
 One concession the Web-Animations group made for the relative animation pattern
 is in section `5.23 Script execution and live updates to the model`
@@ -59,7 +59,7 @@ They are difficult to anticipate, and delay completion.
 It is a mystery to me why Web-Animations has deferred groups for a later version 
 but kept the mutable interface.
 
-Facebook POP animations are mutable and cannot run off the GPU.
+Facebook POP animations are mutable and cannot run on the GPU.
 I have produced many examples showing that the same animation blending can be 
 replicated in a readonly interface that can run off the GPU.
 Also, unlike relative animation, Facebook POP animations cannot blend sequential groups or keyframes.
@@ -68,7 +68,7 @@ Web-Animations would be no different.
 
 The biggest failure is their resistance to adding a simple property 
 that will convert developer specified absolute values to relative values.
-Perhaps it is "not invented here" syndrome, or perhaps they don't want to credit or acknowledge me.
+Perhaps it is “not invented here” syndrome, or perhaps they don't want to credit or acknowledge me.
 But my requests are dismissed as trivial.
 Indeed, subtraction is trivial, but without this additive animation would not be possible in CSS Transitions.
 The web development world will be stuck with their inferior "to-animations" 
