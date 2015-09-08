@@ -102,11 +102,11 @@ function layout() {
 			//easing: "cubic-bezier(.5,0,.5,1)", // default
 		});
 		if (toggled) {
-			rocket1.style.transform = "translate3d(400px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
-			rocket1.style.webkitTransform = "translate3d(400px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
+			rocket1.style.transform = "translate3d(400px,0,0) rotate(-45deg)";
+			rocket1.style.webkitTransform = "translate3d(400px,0,0) rotate(-45deg)";
 		} else {
-			rocket1.style.transform = "translate3d(0,0,0) rotate(135deg)";// must come after hyperAnimate else the dread flickor
-			rocket1.style.webkitTransform = "translate3d(0,0,0) rotate(135deg)";// must come after hyperAnimate else the dread flickor
+			rocket1.style.transform = "translate3d(0,0,0) rotate(135deg)";
+			rocket1.style.webkitTransform = "translate3d(0,0,0) rotate(135deg)";
 		}
 	}
 	
@@ -115,15 +115,15 @@ function layout() {
 			type:"transform",
 			duration:duration,
 			//easing: "cubic-bezier(.5,0,.5,1)", // default
-			from: "rotate(180deg) translate3d(0,0,0) rotate(0deg)", // have to specify all three values, even though we just rotate, because of the way adding works. No index will push below inline style so can't have separate animations per transform function.
-			to: "rotate(0deg) translate3d(0,0,0) rotate(0deg)", // have to specify all three values, even though we just rotate, because of the way adding works. No index will push below inline style so can't have separate animations per transform function.
+			from: "rotate(180deg) translate3d(0,0,0) rotate(0deg)",
+			to: "rotate(0deg) translate3d(0,0,0) rotate(0deg)", // have to specify all three values, even though we just rotate, because of the way additive transforms work.
 		});
 		if (toggled) {
-			rocket2.style.transform = "rotate(180deg) translate3d(200px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
-			rocket2.style.webkitTransform = "rotate(180deg) translate3d(200px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
+			rocket2.style.transform = "rotate(180deg) translate3d(200px,0,0) rotate(-45deg)";
+			rocket2.style.webkitTransform = "rotate(180deg) translate3d(200px,0,0) rotate(-45deg)";
 		} else {
-			rocket2.style.transform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
-			rocket2.style.webkitTransform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)"; // must come after hyperAnimate else the dread flickor
+			rocket2.style.transform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)";
+			rocket2.style.webkitTransform = "rotate(0deg) translate3d(200px,0,0) rotate(-45deg)";
 		}
 	}
 	
