@@ -16,6 +16,7 @@
  
  // This is a derivative work of:
  // https://github.com/web-animations/web-animations-js-legacy
+ // Code has been heavily modified.
 
  /**
  * Copyright 2012 Google Inc. All Rights Reserved.
@@ -267,8 +268,7 @@ var playersAreSorted = false;
 var playerSequenceNumber = 0;
 
 
-
-var verboseTime = false;
+var useScanningSafariFlickerFix = false;
 
 /** @constructor */
 var Player = function(token, timeline, target) {
@@ -324,6 +324,22 @@ Player.prototype = {
 				}
 				this._namedAnimations[key] = animation;
 			}
+			
+			// sequence and group animations do not have a type. Need to scan, but also know what animates from the start and what doesn't.
+			if (useScanningSafariFlickerFix) { // Fixes all flicker except for groups & sequences (and animating layout change like floats which is impossible to fix)
+				console.log("scanningSafariFlickerFix NOT USED");
+				var target = this.target;
+				var property = animation.settings.type;
+				if (isDefinedAndNotNull(property)) {
+					ensureTargetInitialized(property, target);
+					if (!propertyIsSVGAttrib(property, target)) {
+						//if (property === features.transformProperty) target.style._setAnimatingProperty("transform"); // need to resolve what to do with transform prefix
+						if (property === "transform") target.style._setAnimatingProperty(features.transformProperty); // need to resolve what to do with transform prefix
+						else target.style._setAnimatingProperty(property);
+					}
+				}
+			}
+			
 			this._animations.push(animation);
 			this._animationsAreSorted = false;
 			this._registerOnTimeline();
@@ -503,7 +519,7 @@ Player.prototype = {
 	_registerOnTimeline: function() {
 		if (!this._registeredOnTimeline) {
 			if (!isCustomObject(this._target)) this._timeline._stylePlayers.push(this);
-			else	this._timeline._statePlayers.push(this);
+			else this._timeline._statePlayers.push(this);
 			this._registeredOnTimeline = true;
 		}
 	},
@@ -5010,8 +5026,8 @@ var CompositedStateMap = function(target,attribute) { // CompositedPropertyMap
 	this.target = target;
 	this.attribute = attribute;
 	this.animatedValues = {};
-	this.timeFractions = {}; // complete fail.
-	this.needsUpdate = {}
+	//this.timeFractions = {}; // complete fail.
+	//this.needsUpdate = {}
 	
 };
 
@@ -5023,16 +5039,20 @@ CompositedStateMap.prototype = {
 		if (!(animValue instanceof CompositableValue)) throw new TypeError('expected CompositableValue');
 
 		if (animValue instanceof BlendedCompositableValue) {
-			var oldTime = this.timeFractions[property]; // complete fail.
-			var newTime = animValue.fraction; // complete fail.
+			//var oldTime = this.timeFractions[property]; // complete fail.
+			//var newTime = animValue.fraction; // complete fail.
 			
 			this.timeFractions[property] = newTime; // complete fail.
-			if (true || oldTime != newTime) this.properties[property].push(animValue); // can't selectively block by comparing oldTime & newTime
+			//if (oldTime != newTime) 
+				this.properties[property].push(animValue); // can't selectively block by comparing oldTime & newTime
+			//}
 		} else if (animValue instanceof AddReplaceCompositableValue) {
-			var oldTime = this.timeFractions[property];
-			var newTime = animValue.optionalTimeFractionForStateAnimation
-			this.timeFractions[property] = newTime; // complete fail.
-			if (true || oldTime != newTime) this.properties[property].push(animValue); // can't selectively block by comparing oldTime & newTime
+			//var oldTime = this.timeFractions[property];
+			//var newTime = animValue.optionalTimeFractionForStateAnimation
+			//this.timeFractions[property] = newTime; // complete fail.
+			//if (oldTime != newTime) {
+				this.properties[property].push(animValue); // can't selectively block by comparing oldTime & newTime
+			//}
 		} else {
 			this.properties[property].push(animValue);
 		}
@@ -5137,7 +5157,7 @@ CompositedPropertyMap.prototype = {
 		}
 		return true;
 	},
-	clear: function() { // CompositedPropertyMap // from Compositor applyAnimatedValues from ticker // clearValue calls target.style._clearAnimatedProperty(property) which copies over from _surrogateElement to real inline style, in preparation for getComputedStyle
+	clear: function() { // from Compositor applyAnimatedValues from ticker // clearValue calls target.style._clearAnimatedProperty(property) which copies over from _surrogateElement to real inline style, in preparation for getComputedStyle
 		for (var property in this.properties) {
 			if (this.stackDependsOnUnderlyingValue(this.properties[property])) {
 				var target = this.target;
@@ -5153,7 +5173,13 @@ CompositedPropertyMap.prototype = {
 			}
 		}
 	},
-	captureBaseValues: function() { // called from Compositor applyAnimatedValues which is called from ticker
+	
+	captureBaseValues: function() { // FORCES RECALCULATION // called from Compositor applyAnimatedValues which is called from ticker
+		
+		// This is target for optimization to prevent layout thrashing.
+		// Why capture base values at every frame?
+		// Style sheet or className changes are the problem.
+		
 		for (var property in this.properties) {
 			var stack = this.properties[property];
 			if (stack.length > 0 && this.stackDependsOnUnderlyingValue(stack)) {
@@ -5161,27 +5187,19 @@ CompositedPropertyMap.prototype = {
 				ensureTargetInitialized(property, target);
 				var prefixedProperty = property;
 				if (property === 'transform') {
-					//property = features.transformProperty;
 					prefixedProperty = features.transformProperty;
 					if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues transform prefixedProperty:%s;",prefixedProperty);
 				}
 				var cssValue;
-				//if (propertyIsSVGAttrib(property, target)) { // original
-				if (propertyIsSVGAttrib(prefixedProperty, target)) { // TODO: unsure about SVG, do I want prefixed or un-prefixed?
-					//cssValue = target.actuals[property]; // original
-					cssValue = target.actuals[prefixedProperty];
+				if (propertyIsSVGAttrib(property, target)) { // TODO: unsure about SVG. prefixes?
+					cssValue = target.actuals[property];
 				} else {
 					//var computed = getComputedStyle(target);
 					var computed = window.getComputedStyle(target); // Safari fail...
-					//var computedProperty = computed[property];
-					//console.log("CompositedPropertyMap captureBaseValues computed:%s;",JSON.stringify(computed));
-					var computedNonPrefixedProperty = computed[property];
 					var computedProperty = computed[prefixedProperty];
-					if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues computedProperty:%s; nonPrefixed:%s;",computedProperty,computedNonPrefixedProperty);
-					//if (property === features.transformProperty) { // original // preserve transform functions for addition. getComputedStyle returns matrix
+					if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues computedProperty:%s; nonPrefixed:%s;",computedProperty,computed[property]);
 					if (prefixedProperty === features.transformProperty) { // preserve transform functions for addition. getComputedStyle returns matrix
-						//var inline = this.target.style._surrogateElement.style[property]; // original
-						var inline = this.target.style._surrogateElement.style[prefixedProperty];
+						var inline = this.target.style._surrogateElement.style[prefixedProperty]; // accessing private ...
 						if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues inline:%s;",inline);
 						if (isDefinedAndNotNull(inline) && inline.length) computedProperty = inline;
 						else {
@@ -5198,9 +5216,6 @@ CompositedPropertyMap.prototype = {
 				var typeObject = getType(property,cssValue);
 				var baseValue = typeObject.fromCssValue(cssValue);
 				if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues type:%s; baseValue:%s;",typeObject.toString(),JSON.stringify(baseValue));
-				// Chrome: type:transformType; baseValue:[{"t":"rotate","d":[72]}];
-				// Safari: type:nonNumericType; baseValue:"rotate(72deg)";
-				
 				// TODO: Decide what to do with elements not in the DOM.
 				ASSERT_ENABLED && assert( isDefinedAndNotNull(baseValue) && baseValue !== '', 'Base value should always be set. ' + 'Is the target element in the DOM?'); // CompositedPropertyMap
 				this.baseValues[property] = baseValue;
@@ -5209,6 +5224,7 @@ CompositedPropertyMap.prototype = {
 			}
 		}
 	},
+	
 	applyAnimatedValues: function() { // called from Compositor applyAnimatedValues which is called from ticker
 		for (var property in this.properties) {
 			var compositableValues = this.properties[property];
@@ -5393,16 +5409,20 @@ AnimatedCSSStyleDeclaration.prototype = {
 			});
 		}
 	},
-	_restoreProperty: function(property) {
-			this._style[property] = this._surrogateElement.style[property];
+	_restoreProperty: function(property) { // from _clearAnimatedProperty (below)
+			this._style[property] = this._surrogateElement.style[property]; // INVALIDATES STYLE but gets forced in CompositedPropertyMap captureBaseValues
 	},
 	_clearAnimatedProperty: function(property) {
 		this._restoreProperty(property);
 		this._isAnimatedProperty[property] = false;
 	},
 	_setAnimatedProperty: function(property, value) { // called from setValue() from CompositedPropertyMap applyAnimatedValues
-		this._style[property] = value; // sets element.style when animating
+		this._style[property] = value; // INVALIDATES STYLE // sets element.style when animating
 		this._isAnimatedProperty[property] = true;
+	},
+	_setAnimatingProperty: function(property) { // possible Safari flicker fix
+		this._isAnimatedProperty[property] = true;
+		if (verboseSafariGetComputedStyle) console.log("set animating (from Player._addAnimation) possible flicker fix:%s;",property); // fail for group and chain animations
 	}
 };
 
@@ -5438,8 +5458,7 @@ for (var property in document.documentElement.style) {
 			},
 			set: function(value) {
 				// I would prefer to collect all this only after I know there is an implicit animation:
-				//if (verboseSafariGetComputedStyle) 
-				//console.log("===> AnimatedCSSStyleDeclaration SET property:%s; value:%s; type:%s;",property,value,getType(property,value).toString());
+				if (verboseSafariGetComputedStyle) console.log("===> AnimatedCSSStyleDeclaration SET property:%s; value:%s; type:%s;",property,value,getType(property,value).toString());
 				var previous = this._surrogateElement.style[property];
 				var presentation = this._style[property];
 				var zero = getType(property,value).zero().d;
@@ -5447,13 +5466,26 @@ for (var property in document.documentElement.style) {
 				
 				var animation = kxdxImplicitAnimation(property,this._element,value,previous,presentation,zero); // this is ridiculous, but needed because of state animation
 				if (animation) {
-					this._isAnimatedProperty[property] = true;
+					if (!useScanningSafariFlickerFix) this._isAnimatedProperty[property] = true;  // not needed with safari flicker fix, although it is a bad place to be calling someone else's private methods
 					var player = this._element.hyperPlayer();
 					player._addAnimation(animation);
+				} else if (!useScanningSafariFlickerFix) {
+					var player = this._element.hyperPlayer();
+					player._addAnimation({ // Hack to fix Safari flicker. Ensure style changes happen at animation frame tick, using existing methods.
+						type:property,
+						duration:0,
+						ink:"absolute",
+						composite:"add",
+						from:zero,
+						to:zero
+					});
 				}
+				if (verboseSafariGetComputedStyle) console.log("animation:%s;",animation);
 				this._surrogateElement.style[property] = value;
 				this._updateIndices();
-				if (!this._isAnimatedProperty[property]) {
+				// if (!this._isAnimatedProperty[property]) this._style[property] = value; // ORIGINAL
+				if (useScanningSafariFlickerFix && !this._isAnimatedProperty[property]) { 
+					if (verboseSafariGetComputedStyle) console.log("not animated property:%s; value:%s;",property,value);
 					this._style[property] = value;
 				}
 				animatedInlineStyleChanged();
@@ -5548,7 +5580,7 @@ Compositor.prototype = {
 			compositedPropertyMap.addValue(property, compositableValue);
 		}
 	},
-	applyAnimatedValues: function(targets) { // called from ticker // loops through every element that ever animated, whether or not it's currently animating
+	applyAnimatedValues: function(targets) { // called from ticker // Three separate loops needed to minimize layout thrashing
 		for (var i = 0; i < targets.length; i++) {
 			var compositedPropertyMap;
 			var target = targets[i];
@@ -5561,8 +5593,7 @@ Compositor.prototype = {
 			var target = targets[i];
 			if (!isCustomObject(target)) compositedPropertyMap = target._animProperties;
 			else compositedPropertyMap = target._hyperAnimationProperties();
-			if (compositedPropertyMap) compositedPropertyMap.captureBaseValues();
-			
+			if (compositedPropertyMap) compositedPropertyMap.captureBaseValues(); // This could be optimized if you could ignore className & stylesheet changes.
 		}
 		for (var i = 0; i < targets.length; i++) {
 			var compositedPropertyMap;
@@ -5658,10 +5689,8 @@ var usePerformanceTiming =
 		typeof window.performance.timing === 'object' &&
 		typeof window.performance.now === 'function';
 
-// Don't use a local named requestAnimationFrame, to avoid potential problems
-// with hoisting.
-var nativeRaf = window.requestAnimationFrame ||
-		window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
+// Don't use a local named requestAnimationFrame, to avoid potential problems with hoisting.
+var nativeRaf = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
 var raf;
 if (nativeRaf) {
 	raf = function(callback) {
@@ -6065,7 +6094,7 @@ function hypermatic(dict, key) {
 	if (animation instanceof TimedItem) {
 		var player = this.hyperPlayer();
 		player._addAnimation(animation,key);
-		return animation;
+		return animation; // Deprecated. Will not return an animation
 	}
 	
 	
