@@ -35,28 +35,36 @@ div {
 
 .one #blue {
 	transform: translate3d(0px,0px,0);
+	-webkit-transform: translate3d(0px,0px,0);
 }
 .one #green {
 	transform: translate3d(300px,300px,0);
+	-webkit-transform: translate3d(300px,300px,0);
 }
 .one #orange {
 	transform: translate3d(0px,400px,0);
+	-webkit-transform: translate3d(0px,400px,0);
 }
 .one #purple {
 	transform: translate3d(400px,0px,0);
+	-webkit-transform: translate3d(400px,0px,0);
 }
 
 .two #blue {
 	transform: translate3d(400px,400px,0);
+	-webkit-transform: translate3d(400px,400px,0);
 }
 .two #green {
 	transform: translate3d(100px,100px,0);
+	-webkit-transform: translate3d(100px,100px,0);
 }
 .two #orange {
 	transform: translate3d(0px,0px,0);
+	-webkit-transform: translate3d(0px,0px,0);
 }
 .two #purple {
 	transform: translate3d(300px,300px,0);
+	-webkit-transform: translate3d(300px,300px,0);
 }
 
 </style>
@@ -68,7 +76,7 @@ div {
 <div id="orange"></div>	
 <div id="purple"></div>	
 
-<script type="text/javascript" src="https://cdn.rawgit.com/KevinDoughty/Hypermatic/50f0cb12949c0ae9bf1f5d92ad7722f668d25095/hypermatic.js"></script>
+<script type="text/javascript" src="https://cdn.rawgit.com/KevinDoughty/Hypermatic/802b096f1900bc4c02e079c5ab2813f9ca259a8c/hypermatic.js"></script>
 <script type="text/javascript">
 
 var blue = document.getElementById("blue");
@@ -90,9 +98,6 @@ var toggle = function() {
 	
 	toggled = !toggled;
 	
-	if (toggled) document.body.className = "two";
-	else document.body.className = "one";
-
 	if (toggled) {
 			
 		blue.hyperAnimate({
@@ -334,6 +339,10 @@ var toggle = function() {
 			]
 		});	
 	}
+	
+	if (toggled) document.body.className = "two";
+	else document.body.className = "one";
+
 }
 
 document.addEventListener('keydown',toggleShiftKey,false);
