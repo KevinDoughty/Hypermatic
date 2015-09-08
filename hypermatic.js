@@ -421,7 +421,7 @@ Player.prototype = {
 	},
 	get _currentTime() {
 		if (this.timeline.currentTime === null) {
-			console.log("timeline.currentTime is null !!!");
+			//console.log("timeline.currentTime is null !!!");
 			return null;
 		}
 		return isDefined(this._pauseTime) ? this._pauseTime : (this.timeline.currentTime - this.startTime) * this.playbackRate - this._timeDrift;
