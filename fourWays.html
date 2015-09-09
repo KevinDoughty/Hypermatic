@@ -44,7 +44,8 @@ div {
 <div id="purple"></div>
 
 <script type="text/javascript" src="https://cdn.rawgit.com/KevinDoughty/Hypermatic/14f05a5b4a398a374e0c07804e5e7ede69c0a609/hypermatic.js"></script>
-</script><script type="text/javascript">
+</script>
+<script type="text/javascript">
 
 var durationInSeconds = 5.0;
 
@@ -163,8 +164,8 @@ function constantScaleAnimation(value) { // for blue div
 function constantTranslateAnimation(x,y) { // for blue div
 	return { // animation description
 		type:"transform",
-		from:"translate3d("+x+"px, "+y+"px, 0)",
-		to:"translate3d("+x+"px, "+y+"px, 0)",
+		from:"translate3d("+x+"px,"+y+"px,0)",
+		to:"translate3d("+x+"px,"+y+"px,0)",
 		ink:"absolute",
 		index:1,
 		fill:"forwards",
@@ -199,8 +200,8 @@ function rotateAndScale(newR,newS) {
 	if (green) {
 		green.hyperAnimate({ // animation description
 			type:"transform",
-			from:"translate3d("+oldX+"px, "+oldY+"px, 0px) scale("+oldS+") rotate("+oldR+"deg)",
-			to:"translate3d("+oldX+"px, "+oldY+"px, 0px) scale("+newS+") rotate("+newR+"deg)",
+			from:"translate3d("+oldX+"px,"+oldY+"px,0) scale("+oldS+") rotate("+oldR+"deg)",
+			to:"translate3d("+oldX+"px,"+oldY+"px,0) scale("+newS+") rotate("+newR+"deg)",
 			duration:duration,
 			easing:easing,
 		});
@@ -226,8 +227,8 @@ function translateToPoint(newX,newY) {
 		blue.hyperAnimate(constantTranslateAnimation(newX,newY),"underlyingTranslate");
 		blue.hyperAnimate({ // animation description
 			type:"transform",
-			from:"translate3d("+oldX+"px, "+oldY+"px, 0px)",
-			to:"translate3d("+newX+"px, "+newY+"px, 0px)",
+			from:"translate3d("+oldX+"px,"+oldY+"px,0)",
+			to:"translate3d("+newX+"px,"+newY+"px,0)",
 			duration:duration,
 			easing:easing,
 			index:1,
@@ -237,8 +238,8 @@ function translateToPoint(newX,newY) {
 	if (green) {
 		green.hyperAnimate({ // animation description
 			type:"transform",
-			from:"translate3d("+oldX+"px, "+oldY+"px, 0px) scale("+oldS+") rotate("+oldR+"deg)",
-			to:"translate3d("+newX+"px, "+newY+"px, 0px) scale("+oldS+") rotate("+oldR+"deg)",
+			from:"translate3d("+oldX+"px,"+oldY+"px,0) scale("+oldS+") rotate("+oldR+"deg)",
+			to:"translate3d("+newX+"px,"+newY+"px,0) scale("+oldS+") rotate("+oldR+"deg)",
 			duration:duration,
 			easing:easing,
 		});	
@@ -256,6 +257,7 @@ function translateToPoint(newX,newY) {
 		purple.style.webkitTransform = "translate3d("+newX+"px,"+newY+"px,0) scale("+oldS+") rotate("+oldR+"deg)";
 	}
 }
+
 </script>
 </body>
 </html>
