@@ -34,8 +34,8 @@ div {
 </head>
 <body>
 
-<input type="button" value="translate" onclick = "toggleTranslate();">
-<input type="button" value="rotate" onclick = "toggleRotate();">
+<input type="button" value="translate" id="translate">
+<input type="button" value="rotate" id="rotate">
 
 
 <div id="blue"></div>
@@ -43,7 +43,7 @@ div {
 <div id="orange"></div>
 <div id="purple"></div>
 
-<script type="text/javascript" src="https://cdn.rawgit.com/KevinDoughty/Hypermatic/802b096f1900bc4c02e079c5ab2813f9ca259a8c/hypermatic.js"></script>
+<script type="text/javascript" src="https://cdn.rawgit.com/KevinDoughty/Hypermatic/14f05a5b4a398a374e0c07804e5e7ede69c0a609/hypermatic.js"></script>
 </script><script type="text/javascript">
 
 var blue = document.getElementById("blue");
@@ -229,14 +229,15 @@ function translateToPoint(newX,newY) {
 	}
 }
 
-var toggleTranslate = function() {
+function  toggleTranslate() {
 	translated = !translated;
 	var newX = 0;
 	if (translated) newX = 200;
 	translateToPoint(newX,0);
 	oldX = newX;
 }
-var toggleRotate = function() {
+
+function toggleRotate() {
 	rotated = !rotated;
 	var newR = 0;
 	var newS = 1;
@@ -247,11 +248,13 @@ var toggleRotate = function() {
 	rotateAndScale(newR,newS);
 	oldR = newR;
 	oldS = newS;
-}
+} 
 
 document.addEventListener('keydown',toggleShiftKey,false);
 document.addEventListener('keyup',toggleShiftKey,false);
- 
+document.getElementById("translate").addEventListener("click",toggleTranslate,false);
+document.getElementById("rotate").addEventListener("click",toggleRotate,false);
+
 </script>
 </body>
 </html>

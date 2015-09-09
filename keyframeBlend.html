@@ -38,7 +38,7 @@ html, body {
 }
 </style>
 
-<script type="text/javascript" src="https://cdn.rawgit.com/KevinDoughty/Hypermatic/802b096f1900bc4c02e079c5ab2813f9ca259a8c/hypermatic.js"></script>
+<script type="text/javascript" src="https://cdn.rawgit.com/KevinDoughty/Hypermatic/14f05a5b4a398a374e0c07804e5e7ede69c0a609/hypermatic.js"></script>
 </head>
 
 <body>
@@ -55,13 +55,11 @@ html, body {
 
 var duration = 2.5;
 
-var counter = 0;
-var toggled = false;
-var perfect = "cubic-bezier(.5,0,.5,1)"; // default easing
-
 var rocket1 = document.getElementById("rocket1");
 var rocket2 = document.getElementById("rocket2");
 var planet = document.getElementById("planet");
+var counter = 0;
+var toggled = false;
 
 document.addEventListener('mousedown', function(e){
 	e.stopPropagation();
