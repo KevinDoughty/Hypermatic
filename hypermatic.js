@@ -4787,7 +4787,6 @@ var getCssOnlyType = function(property) {
 	return propertyTypes[property] || nonNumericType;
 };
 
-
 var getType = function(property,cssValue) { // should be css value
 	var type = propertyTypes[property];
 	if (!type) {
@@ -5009,10 +5008,7 @@ var CompositedStateMap = function(target,attribute) { // CompositedPropertyMap
 	this.baseValues = {};
 	this.target = target;
 	this.attribute = attribute;
-	this.animatedValues = {};
-	//this.timeFractions = {}; // complete fail.
-	//this.needsUpdate = {}
-	
+	this.animatedValues = {};	
 };
 
 CompositedStateMap.prototype = {
@@ -5021,25 +5017,7 @@ CompositedStateMap.prototype = {
 			this.properties[property] = [];
 		}
 		if (!(animValue instanceof CompositableValue)) throw new TypeError('expected CompositableValue');
-
-		if (animValue instanceof BlendedCompositableValue) {
-			//var oldTime = this.timeFractions[property]; // complete fail.
-			//var newTime = animValue.fraction; // complete fail.
-			
-			this.timeFractions[property] = newTime; // complete fail.
-			//if (oldTime != newTime) 
-				this.properties[property].push(animValue); // can't selectively block by comparing oldTime & newTime
-			//}
-		} else if (animValue instanceof AddReplaceCompositableValue) {
-			//var oldTime = this.timeFractions[property];
-			//var newTime = animValue.optionalTimeFractionForStateAnimation
-			//this.timeFractions[property] = newTime; // complete fail.
-			//if (oldTime != newTime) {
-				this.properties[property].push(animValue); // can't selectively block by comparing oldTime & newTime
-			//}
-		} else {
-			this.properties[property].push(animValue);
-		}
+		this.properties[property].push(animValue);
 	},
 	stackDependsOnUnderlyingValue: function(stack) {
 		for (var i = 0; i < stack.length; i++) {
