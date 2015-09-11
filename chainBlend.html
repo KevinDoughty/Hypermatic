@@ -104,7 +104,6 @@ function makeDrawingChain(start) {
 
 function layout() {
 	if (element) {
-		console.log("%s",chainCounter);
 		element.hyperAnimate(makeStarChain(chainCounter));
 		component.hyperAnimate(makeDrawingChain(chainCounter));
 		chainCounter++;
