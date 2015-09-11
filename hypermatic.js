@@ -115,7 +115,7 @@ TimingDict.prototype = {
 	fill : 'none',
 	iterationStart: 0,
 	iterations: 1,
-	duration: 'auto', // original. For groups, should be 0
+	duration: 'auto', // original. Auto needed for groups. I would prefer 0
 	//duration: 0,
 	playbackRate: 1,
 	direction: 'normal',
@@ -303,12 +303,12 @@ Player.prototype = {
 			// TODO: be sure setting start time does not affect groups or child animations adversely.
 			if (animation._startTime === null || animation._startTime == undefined) animation._startTime = this.timeline.currentTime === null ? 0 : this.timeline.currentTime; // added as fix for player refactoring, previously animation startTime was always zero
 			
-			if (!isDefinedAndNotNull(key) && isDefinedAndNotNull(animation._hyperName)) {
-				key = animation._hyperName;
+			if (!isDefinedAndNotNull(key) && isDefinedAndNotNull(animation._hyperKey)) {
+				key = animation._hyperKey;
 			}
 			
 			if (isDefinedAndNotNull(key)) {
-				if (animation._hyperIncrementName) { // this is not good, the way I set _hyperName and _hyperIncrementName
+				if (animation._hyperIncrementName) { // this is not good, the way I set _hyperKey and _hyperIncrementName
 					var increment = this._namedAnimationCounter[key];
 					if (!increment) increment = 0;
 					this._namedAnimationCounter[key] = increment + 1;
@@ -316,7 +316,7 @@ Player.prototype = {
 					else key = key + increment;
 					
 				}
-				animation._hyperName = key;
+				animation._hyperKey = key;
 				if (this._namedAnimations[key]) {
 					this._removeAnimationNamed(key); // remove existing animation with same key
 				}
@@ -346,7 +346,7 @@ Player.prototype = {
 	},
 	_removeAnimationAtIndex: function(index) {
 		var animation = this._animations[index];
-		var key = animation._hyperName;
+		var key = animation._hyperKey;
 		if (isDefinedAndNotNull(key)) {
 			delete this._namedAnimations[key];
 		}
@@ -538,7 +538,7 @@ var TimedItem = function(token, timingInput) {
 	this._sequenceNumber = TimedItem.count++;
 
 	this._hyperIndex = 0;
-	this._hyperName = null;
+	this._hyperKey = null;
 	this._hyperIncrementName = false;
 	this._hyperDict = shallowObjectCopy(timingInput);
 	
@@ -5928,12 +5928,7 @@ var kxdxAnimationFromDescription = function(description,depth) {
 	if (description) {
 		//if (description instanceof TimedItem) {
 		if (description instanceof HyperAnimation) {
-			//animation = description;
 			animation = new HyperAnimation(description.settings);
-			
-			// failing because of group
-			// probably has its own startTime
-			
 		} else if (Array.isArray(description)) {
 			if (!isDefinedAndNotNull(depth)) depth = 0
 			var array = description;
@@ -6024,10 +6019,10 @@ var kxdxImplicitAnimation = function (property,target,value,previous,presentatio
 		//console.log("implicitAnimation:%s;",JSON.stringify(implicitAnimation.settings));
 		// implicitAnimation:{"duration":5,"type":"webkitTransform","to":"translate3d(200px,0px,0) scale(1) rotate(0deg)","from":"","fill":"backwards"};
 		var naming = settings.naming;
-		//if (naming == "none") implicitAnimation._hyperName = property;
-		if (naming === "exact") implicitAnimation._hyperName = property;
-		else if (naming === "increment") implicitAnimation._hyperName = property;
-		else if (ink === "absolute" && naming !== "none") implicitAnimation._hyperName = property;
+		//if (naming == "none") implicitAnimation._hyperKey = property;
+		if (naming === "exact") implicitAnimation._hyperKey = property;
+		else if (naming === "increment") implicitAnimation._hyperKey = property;
+		else if (ink === "absolute" && naming !== "none") implicitAnimation._hyperKey = property;
 		
 		return implicitAnimation;
 	}
@@ -6045,17 +6040,11 @@ function hypermatic(dict, key) {
 		player._addAnimation(animation,key);
 		//return animation; // Do not return an animation
 	}
-	
-	
 }
 window.Element.prototype.hypermatic = hypermatic;
-window.Element.prototype.animateStyle = hypermatic;
 window.Element.prototype.hyperAnimate = hypermatic;
 window.Element.prototype.hyperStyle = hypermatic;
 window.Element.prototype.hyperAnimateStyle = hypermatic;
-
-
-
 
 window.Element.prototype.hyperPlayer = function() {
 	var player = this._hyperPlayer;
@@ -6066,7 +6055,7 @@ window.Element.prototype.hyperPlayer = function() {
 	return player;
 }
 	
-	
+
 window.Element.prototype.hyperDefaultAnimations = function() {
 	var animations = this._hyperDefaultAnimations;
 	if (!animations) return {};
@@ -6089,6 +6078,7 @@ window.Element.prototype.setHyperAnimationDelegate = function(delegate) {
 		console.warn("must implement hyperAnimationForKey");
 	}
 }
+/*
 window.Element.prototype.hyperAnimator = function() {
 	return this._hyperAnimator;
 }
@@ -6100,7 +6090,7 @@ window.Element.prototype.setHyperAnimator = function(animator) {
 		console.warn("must implement hyperAnimationForKey");
 	}
 }
-
+*/
 var hyperAnimations = function() {
 	return this.hyperPlayer()._animations.slice(0);
 }	
@@ -6110,7 +6100,6 @@ var hyperStyleAnimations = function() {
 var hyperStateAnimations = function() {
 	return this.hyperPlayer()._animations.slice(0);
 };
-
 
 window.Element.prototype.hyperAnimations = hyperAnimations;
 window.Element.prototype.hyperStyleAnimations = hyperAnimations;
@@ -6124,17 +6113,16 @@ var hyperAnimationNamed = function(key) {
 }
 window.Element.prototype.hyperAnimationNamed = hyperAnimationNamed;
 
-window.Element.prototype.hyperRemoveAnimationNamed =	function(key) {
+window.Element.prototype.hyperRemoveAnimationNamed = function(key) {
 	return this.hyperPlayer()._removeAnimationNamed(key);
 }
-window.Element.prototype.hyperGetAnimationById = hyperAnimationNamed;
+//window.Element.prototype.hyperGetAnimationById = hyperAnimationNamed;
 
-// TODO: reconsider what classes are public.
-//		Even if you don't create them, you might want to check instanceof
 window.HyperAnimation = HyperAnimation;
 window.HyperAnimationGroup = HyperAnimationGroup;
 window.HyperAnimationChain = HyperAnimationChain;
 
+/*
 //window.Animation = HyperAnimation;
 //window.AnimationEffect = AnimationEffect;
 //window.KeyframeEffect = KeyframeEffect;
@@ -6154,23 +6142,7 @@ window.Timing = Timing;
 window.Timeline = Timeline;
 window.TimingEvent = TimingEvent;
 window.TimingGroup = TimingGroup;
-
-window._WebAnimationsTestingUtilities = {
-	_PRIVATE: PRIVATE,
-	_positionListType: positionListType,
-	_hsl2rgb: hsl2rgb,
-	_types: propertyTypes,
-	_knownPlayers: document.timeline._statePlayers.concat(document.timeline._stylePlayers),
-	_pacedTimingFunction: PacedTimingFunction
-};
-
-
-
-
-
-
-
-
+*/
 
 var mixin = { // return value is combination Hypermatic namespace and React mixin
 	// React methods are exposed on Hypermatic
@@ -6178,6 +6150,7 @@ var mixin = { // return value is combination Hypermatic namespace and React mixi
 	// undefined behavior if you use one meant for the other.
 	// TODO: figure out better solution or at least document which belongs to what
 	// TODO: also clean up lots of unused functions, here and on Element.
+	// TODO: everything prefixed hyper
 	
 	flush: transact,
 	
@@ -6294,18 +6267,14 @@ var mixin = { // return value is combination Hypermatic namespace and React mixi
 	hyperAnimationNamed : function(key) {
 		return hyperAnimationNamed.apply(this,arguments);
 	},
-	hyperGetAnimationById : function(key) {
-		return hyperAnimationNamed.apply(this,arguments);
-	},
-	
-	defaultAnimations : function() {
+	hyperDefaultAnimations : function() {
 		var animations = this.state.hyperDefaultAnimations;
 		if (!animations) {
 			animations = {};
 		}
 		return defaultAnimations;
 	},
-	setDefaultAnimations : function(animations) {
+	setHyperDefaultAnimations : function(animations) {
 		this.setState({ hyperDefaultAnimations : animations });
 	},
 }
