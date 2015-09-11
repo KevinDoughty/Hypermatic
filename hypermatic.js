@@ -5453,7 +5453,7 @@ for (var property in document.documentElement.style) {
 					var player = this._element.hyperPlayer();
 					var description = { // Create animation for every property change... does not happen if AnimatedCSSStyleDeclaration does not exist !!! // Not just a hack to fix Safari flicker. Ensure style changes happen at animation frame tick, using existing methods.
 						type:property,
-						duration:0,
+						duration:0
 					};
 					animation = kxdxAnimationFromDescription(description);
 					player._addAnimation(animation);
