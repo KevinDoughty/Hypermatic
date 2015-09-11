@@ -115,8 +115,8 @@ TimingDict.prototype = {
 	fill : 'none',
 	iterationStart: 0,
 	iterations: 1,
-	//duration: 'auto', // original
-	duration: 0,
+	duration: 'auto', // original. For groups, should be 0
+	//duration: 0,
 	playbackRate: 1,
 	direction: 'normal',
 	easing: 'linear'
@@ -333,7 +333,6 @@ Player.prototype = {
 	},
 	_removeAnimation: function(animation) {
 		var index = this._animations.indexOf(animation);
-		//console.log("_removeAnimation at index:%s;",index);
 		if (index > -1) this._removeAnimationAtIndex(index);
 		else console.log("groups probably need to be scanned to remove animation");
 	},
@@ -5454,6 +5453,7 @@ for (var property in document.documentElement.style) {
 					var player = this._element.hyperPlayer();
 					var description = { // Create animation for every property change... does not happen if AnimatedCSSStyleDeclaration does not exist !!! // Not just a hack to fix Safari flicker. Ensure style changes happen at animation frame tick, using existing methods.
 						type:property,
+						duration:0,
 					};
 					animation = kxdxAnimationFromDescription(description);
 					player._addAnimation(animation);
@@ -5903,9 +5903,6 @@ var ticker = function(rafTime, isRepeat) {
 		cachedClockTimeMillis = rafTime;
 	}
 	
-	//// Clear any modifications to getComputedStyle.
-	//ensureOriginalGetComputedStyle(); // remove retick // Adding retick call to getComputedStyle is probably unnecessary trickery
-
 	var paused = false; // TODO: implement
 	var finished = transact();
 	
@@ -6068,7 +6065,7 @@ function hypermatic(dict, key) {
 	if (animation instanceof TimedItem) {
 		var player = this.hyperPlayer();
 		player._addAnimation(animation,key);
-		return animation; // Deprecated. Will not return an animation
+		//return animation; // Do not return an animation
 	}
 	
 	
