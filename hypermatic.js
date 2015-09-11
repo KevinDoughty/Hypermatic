@@ -115,7 +115,8 @@ TimingDict.prototype = {
 	fill : 'none',
 	iterationStart: 0,
 	iterations: 1,
-	duration: 'auto',
+	//duration: 'auto', // original
+	duration: 0,
 	playbackRate: 1,
 	direction: 'normal',
 	easing: 'linear'
@@ -267,9 +268,6 @@ function PLAYER() {}
 var playersAreSorted = false;
 var playerSequenceNumber = 0;
 
-
-var useScanningSafariFlickerFix = false;
-
 /** @constructor */
 var Player = function(token, timeline, target) {
 	if (token !== PRIVATE) throw new TypeError('Illegal constructor');
@@ -323,21 +321,6 @@ Player.prototype = {
 					this._removeAnimationNamed(key); // remove existing animation with same key
 				}
 				this._namedAnimations[key] = animation;
-			}
-			
-			// sequence and group animations do not have a type. Need to scan, but also know what animates from the start and what doesn't.
-			if (useScanningSafariFlickerFix) { // Fixes all flicker except for groups & sequences (and animating layout change like floats which is impossible to fix)
-				console.log("scanningSafariFlickerFix NOT USED");
-				var target = this.target;
-				var property = animation.settings.type;
-				if (isDefinedAndNotNull(property)) {
-					ensureTargetInitialized(property, target);
-					if (!propertyIsSVGAttrib(property, target)) {
-						//if (property === features.transformProperty) target.style._setAnimatingProperty("transform"); // need to resolve what to do with transform prefix
-						if (property === "transform") target.style._setAnimatingProperty(features.transformProperty); // need to resolve what to do with transform prefix
-						else target.style._setAnimatingProperty(property);
-					}
-				}
 			}
 			
 			this._animations.push(animation);
@@ -1879,6 +1862,8 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
 		var frames = this._propertySpecificKeyframes();
 		for (var property in frames) {
 			var sample = this._sampleForProperty(frames[property], timeFraction, currentIteration);
+			//console.log("sample:%s;",JSON.stringify(sample));
+			//sample:{"startValue":{"value":[{"t":"translate3d","d":[{"px":0},{"px":36},{"px":0}]}],"typeObject":{},"composite":"add"},"endValue":{"value":[{"t":"translate3d","d":[{"px":0},{"px":0},{"px":0}]}],"typeObject":{},"composite":"add"},"fraction":0.9979470289616761};
 			compositor.setAnimatedValue(target, property, sample);
 		}
 	},
@@ -1985,7 +1970,7 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
 					if (this._inversed) actualRawValue = typeObject.inverse(actualRawValue);
 					var actualCssValue = typeObject.toCssValue(actualRawValue);
 					var propertyKeyframe = new PropertySpecificKeyframe(frame.offset, property, actualCssValue, actualRawValue); // (offset, property, cssValue, optionalRawValue)
-					this._cachedPropertySpecificKeyframes[property].unshift(propertyKeyframe); // unshift makes logging confusing...
+					this._cachedPropertySpecificKeyframes[property].unshift(propertyKeyframe);
 				}
 			}
 		} else {
@@ -5419,10 +5404,6 @@ AnimatedCSSStyleDeclaration.prototype = {
 	_setAnimatedProperty: function(property, value) { // called from setValue() from CompositedPropertyMap applyAnimatedValues
 		this._style[property] = value; // INVALIDATES STYLE // sets element.style when animating
 		this._isAnimatedProperty[property] = true;
-	},
-	_setAnimatingProperty: function(property) { // possible Safari flicker fix
-		this._isAnimatedProperty[property] = true;
-		if (verboseSafariGetComputedStyle) console.log("set animating (from Player._addAnimation) possible flicker fix:%s;",property); // fail for group and chain animations
 	}
 };
 
@@ -5457,37 +5438,31 @@ for (var property in document.documentElement.style) {
 				return value;
 			},
 			set: function(value) {
-				// I would prefer to collect all this only after I know there is an implicit animation:
 				if (verboseSafariGetComputedStyle) console.log("===> AnimatedCSSStyleDeclaration SET property:%s; value:%s; type:%s;",property,value,getType(property,value).toString());
+				
 				var previous = this._surrogateElement.style[property];
 				var presentation = this._style[property];
 				var zero = getType(property,value).zero().d;
 				if (!zero && zero !== 0) zero = getType(property,value).zero();
 				
-				var animation = kxdxImplicitAnimation(property,this._element,value,previous,presentation,zero); // this is ridiculous, but needed because of state animation
+				var animation = kxdxImplicitAnimation(property,this._element,value,previous,presentation,zero);
 				if (animation) {
-					if (!useScanningSafariFlickerFix) this._isAnimatedProperty[property] = true;  // not needed with safari flicker fix, although it is a bad place to be calling someone else's private methods
+					this._isAnimatedProperty[property] = true; 
 					var player = this._element.hyperPlayer();
 					player._addAnimation(animation);
-				} else if (!useScanningSafariFlickerFix) {
+				} else {
 					var player = this._element.hyperPlayer();
-					player._addAnimation({ // Hack to fix Safari flicker. Ensure style changes happen at animation frame tick, using existing methods.
+					var description = { // Create animation for every property change... does not happen if AnimatedCSSStyleDeclaration does not exist !!! // Not just a hack to fix Safari flicker. Ensure style changes happen at animation frame tick, using existing methods.
 						type:property,
-						duration:0,
-						ink:"absolute",
-						composite:"add",
-						from:zero,
-						to:zero
-					});
+					};
+					animation = kxdxAnimationFromDescription(description);
+					player._addAnimation(animation);
 				}
 				if (verboseSafariGetComputedStyle) console.log("animation:%s;",animation);
 				this._surrogateElement.style[property] = value;
 				this._updateIndices();
 				// if (!this._isAnimatedProperty[property]) this._style[property] = value; // ORIGINAL
-				if (useScanningSafariFlickerFix && !this._isAnimatedProperty[property]) { 
-					if (verboseSafariGetComputedStyle) console.log("not animated property:%s; value:%s;",property,value);
-					this._style[property] = value;
-				}
+				
 				animatedInlineStyleChanged();
 			}
 		}));
@@ -5576,7 +5551,7 @@ Compositor.prototype = {
 	setAnimatedValue: function(target, property, compositableValue) { // called from BasicEffect _sample from Animation _sample from ticker as it loops through each sorted animation
 		if (target !== null) {
 			var compositedPropertyMap = hyperAnimationProperties.apply(target);
-			if (verboseSafariGetComputedStyle) console.log("compositor setAnimatedValue:%s; property:%s; target:%s;",JSON.stringify(compositableValue),property,target);
+			//if (verboseSafariGetComputedStyle) console.log("!!! compositor setAnimatedValue:%s; property:%s; target:%s;",JSON.stringify(compositableValue),property,target);
 			compositedPropertyMap.addValue(property, compositableValue);
 		}
 	},
@@ -5826,11 +5801,8 @@ var debugTicker = false;
 function TICKER() {}
 
 
-
-
 var tickPlayers = function(playaz) {
 	
-		
 	var finished = true;
 	var paused = true;
 	var animations = [];
@@ -5850,9 +5822,9 @@ var tickPlayers = function(playaz) {
 		var finishedAnimations = [];
 		animations.forEach(function(animation) {
 			finished = finished && !animation._hasFutureAnimation(playDirectionForwards);
+			
 			if (!animation._hasFutureEffect()) {
 				finishedAnimations.push(animation);
-				var debugAnim = animation;
 			} else if (animation._isActive()) {
 				animation._sample(playa.target);
 			}
@@ -5884,23 +5856,7 @@ var tickPlayers = function(playaz) {
 };
 
 
-var lastTickTime;
-var ticker = function(rafTime, isRepeat) {
-	// Don't tick till the page is loaded....
-	if (!isDefined(documentTimeZeroAsRafTime)) {
-		console.log("wait");
-		raf(ticker);
-		return;
-	}
-	
-	if (!isRepeat) {
-		if (rafTime < lastClockTimeMillis) {
-			rafTime = lastClockTimeMillis;
-		}
-		lastTickTime = rafTime;
-		cachedClockTimeMillis = rafTime;
-	}
-	
+function transact() {
 	// Clear any modifications to getComputedStyle.
 	ensureOriginalGetComputedStyle(); // remove retick // Adding retick call to getComputedStyle is probably unnecessary trickery
 
@@ -5918,14 +5874,6 @@ var ticker = function(rafTime, isRepeat) {
 	paused = paused && returnStyle.paused;
 	finished = finished && returnStyle.finished;
 	
-	//console.log("tick:%s; style:%s; state:%s; finished:%s; isFinished:%s; isPaused:%s;",lastTickTime,document.timeline._stylePlayers,document.timeline._statePlayers,finishedPlayers,finished,paused);
-	/*
-	if (finished) {
-		if (document.timeline._stylePlayers.length + document.timeline._statePlayers.length != finishedPlayers.length) {
-			console.log("leaking animations! (unless kept around by fill) style:%s; state:%s; finished:%s;",document.timeline._stylePlayers,document.timeline._statePlayers,finishedPlayers);
-		}
-	}
-	*/
 	playersAreSorted = true;
 	// Remove finished players. Warning: _deregisterFromTimeline modifies
 	// the PLAYER list. It should not be called from within a PLAYERS.forEach
@@ -5934,6 +5882,32 @@ var ticker = function(rafTime, isRepeat) {
 		player._deregisterFromTimeline();
 		playersAreSorted = false;
 	});
+	
+	return finished;
+}
+
+var lastTickTime;
+var ticker = function(rafTime, isRepeat) {
+	// Don't tick till the page is loaded....
+	if (!isDefined(documentTimeZeroAsRafTime)) {
+		console.log("wait");
+		raf(ticker);
+		return;
+	}
+	
+	if (!isRepeat) {
+		if (rafTime < lastClockTimeMillis) {
+			rafTime = lastClockTimeMillis;
+		}
+		lastTickTime = rafTime;
+		cachedClockTimeMillis = rafTime;
+	}
+	
+	//// Clear any modifications to getComputedStyle.
+	//ensureOriginalGetComputedStyle(); // remove retick // Adding retick call to getComputedStyle is probably unnecessary trickery
+
+	var paused = false; // TODO: implement
+	var finished = transact();
 	
 	if (!isRepeat) {
 		if (finished || paused) {
@@ -6229,6 +6203,9 @@ var mixin = { // return value is combination Hypermatic namespace and React mixi
 	// undefined behavior if you use one meant for the other.
 	// TODO: figure out better solution or at least document which belongs to what
 	// TODO: also clean up lots of unused functions, here and on Element.
+	
+	flush: transact,
+	
 	componentWillMount: function() {
 		this._hyperAnimationProperties(); // create hyperAnimationProperties object now because it calls setState, which cannot happen during render
 	},
