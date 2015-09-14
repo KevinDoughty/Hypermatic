@@ -1957,14 +1957,14 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
 						lastCssValue = rawNeutralValue;
 					}
 					var typeObject = getType(property, lastCssValue);
-					//var lastRawValue = fromCssValue(property, lastCssValue);
-					var lastRawValue = typeObject.fromCssValue(lastCssValue);
+					var lastRawValue = fromCssValue(property, lastCssValue);
+					//var lastRawValue = typeObject.fromCssValue(lastCssValue);
 					var specifiedCssValue = frame.cssValues[property];
 					if (specifiedCssValue === undefined || specifiedCssValue === null) { // cannot happen because the property is in frame.cssValues
 						specifiedCssValue = rawNeutralValue;
 					}
-					//var specifiedRawValue = fromCssValue(property, specifiedCssValue);
-					var specifiedRawValue = typeObject.fromCssValue(specifiedCssValue);
+					var specifiedRawValue = fromCssValue(property, specifiedCssValue);
+					//var specifiedRawValue = typeObject.fromCssValue(specifiedCssValue);
 					var actualRawValue = typeObject.subtract(specifiedRawValue, lastRawValue);
 					if (this._inversed) actualRawValue = typeObject.inverse(actualRawValue);
 					var actualCssValue = typeObject.toCssValue(actualRawValue);
@@ -2168,9 +2168,9 @@ var PropertySpecificKeyframe = function(offset, property, cssValue, optionalRawV
 PropertySpecificKeyframe.prototype = {
 	rawValue: function() {
 		if (!isDefinedAndNotNull(this.cachedRawValue)) {
-			//this.cachedRawValue = fromCssValue(this.property, this.cssValue);
-			var typeObject = getType(this.property,this.cssValue);
-			this.cachedRawValue = typeObject.fromCssValue(this.cssValue);
+			this.cachedRawValue = fromCssValue(this.property, this.cssValue);
+			//var typeObject = getType(this.property,this.cssValue);
+			//this.cachedRawValue = typeObject.fromCssValue(this.cssValue);
 		}
 		return this.cachedRawValue;
 	}
@@ -4577,6 +4577,7 @@ var transformType = {
 		if (value === undefined) {
 			return undefined;
 		}
+		if (value === "none") console.log("N-O-N-E");
 		var result = [];
 		while (value.length > 0) {
 			var r;
@@ -4656,6 +4657,7 @@ var propertyTypes = {
 	textShadow: shadowType,
 	top: percentLengthAutoType,
 	transform: transformType,
+	WebkitTransform: transformType, // React?
 	webkitTransform: transformType, // temporary
 	msTransform: transformType, // temporary
 	
@@ -4765,8 +4767,8 @@ var propertyValueAliases = {
 	},
 	top: { initial: 'auto' },
 	transform: {
-		initial: '',
-		none: ''
+		initial: "matrix(1, 0, 0, 1, 0, 0)",
+		none: "matrix(1, 0, 0, 1, 0, 0)"
 	},
 	verticalAlign: { initial: '0px' },
 	visibility: { initial: 'visible' },
@@ -4787,7 +4789,7 @@ var getCssOnlyType = function(property) {
 	return propertyTypes[property] || nonNumericType;
 };
 
-var getType = function(property,cssValue) { // should be css value
+var getType = function(property,cssValue) { // syntax?
 	var type = propertyTypes[property];
 	if (!type) {
 		if (isNumber(cssValue)) type = numberType;
@@ -4868,8 +4870,7 @@ var toCssValue = function(property, value, svgMode) { // Only used by Composited
 	return getCssOnlyType(property,value).toCssValue(value, svgMode);
 };
 
-var fromCssValue = function(property, cssValue) {
-	console.log("fromCssValue deprecated");
+var fromCssValue = function(property, cssValue) { // TODO: use this
 	if (cssValue === cssNeutralValue) return rawNeutralValue;
 	if (cssValue === 'inherit') return value;
 	if (property in propertyValueAliases && cssValue in propertyValueAliases[property]) {
@@ -5042,7 +5043,8 @@ CompositedStateMap.prototype = {
 			var typeObject = getType(property,baseCssValue);
 		
 			if (!isDefinedAndNotNull(baseValue)) {
-		 		baseValue = typeObject.fromCssValue(baseCssValue);
+		 		//baseValue = typeObject.fromCssValue(baseCssValue);
+		 		baseValue = fromCssValue(property,baseCssValue);
 		 		this.baseValues[property] = baseValue;
 			}
 			if (compositableValues.length) {
@@ -5176,7 +5178,8 @@ CompositedPropertyMap.prototype = {
 				}
 				if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues property:%s; cssValue:%s;",property,cssValue);		
 				var typeObject = getType(property,cssValue);
-				var baseValue = typeObject.fromCssValue(cssValue);
+				//var baseValue = typeObject.fromCssValue(cssValue);
+				var baseValue = fromCssValue(property,cssValue);
 				if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues type:%s; baseValue:%s;",typeObject.toString(),JSON.stringify(baseValue));
 				// TODO: Decide what to do with elements not in the DOM.
 				ASSERT_ENABLED && assert( isDefinedAndNotNull(baseValue) && baseValue !== '', 'Base value should always be set. ' + 'Is the target element in the DOM?'); // CompositedPropertyMap
@@ -5416,22 +5419,19 @@ for (var property in document.documentElement.style) {
 			},
 			set: function(value) {
 				if (verboseSafariGetComputedStyle) console.log("===> AnimatedCSSStyleDeclaration SET property:%s; value:%s; type:%s;",property,value,getType(property,value).toString());
-				
 				var previous = this._surrogateElement.style[property];
 				var presentation = this._style[property];
 				var zero = getType(property,value).zero().d;
 				if (!zero && zero !== 0) zero = getType(property,value).zero();
-				
+				var player = this._element.hyperPlayer();
 				var animation = kxdxImplicitAnimation(property,this._element,value,previous,presentation,zero);
 				if (animation) {
 					this._isAnimatedProperty[property] = true; 
-					var player = this._element.hyperPlayer();
 					player._addAnimation(animation);
 				} else {
-					var player = this._element.hyperPlayer();
 					var description = { // Create animation for every property change... does not happen if AnimatedCSSStyleDeclaration does not exist !!! // Not just a hack to fix Safari flicker. Ensure style changes happen at animation frame tick, using existing methods.
 						type:property,
-						duration:0
+						duration:0 // default duration is "auto"
 					};
 					animation = kxdxAnimationFromDescription(description);
 					player._addAnimation(animation);
@@ -6109,7 +6109,9 @@ window.Element.prototype.removeAllHyperAnimations = function() {
 }
 
 var hyperAnimationNamed = function(key) {
-	return this.hyperPlayer()._animationNamed(key);
+	var animation = this.hyperPlayer()._animationNamed(key);
+	if (animation) return kxdxAnimationFromDescription(animation.settings);
+	return null;
 }
 window.Element.prototype.hyperAnimationNamed = hyperAnimationNamed;
 
@@ -6122,6 +6124,9 @@ window.HyperAnimation = HyperAnimation;
 window.HyperAnimationGroup = HyperAnimationGroup;
 window.HyperAnimationChain = HyperAnimationChain;
 
+window.HyperMotionPathEffect = HyperMotionPathEffect;
+
+
 /*
 //window.Animation = HyperAnimation;
 //window.AnimationEffect = AnimationEffect;
@@ -6130,7 +6135,6 @@ window.HyperAnimationChain = HyperAnimationChain;
 //window.MediaReference = MediaReference;
 //window.ParGroup = ParGroup;
 
-window.HyperMotionPathEffect = HyperMotionPathEffect;
 
 window.Player = Player;
 window.PseudoElementReference = PseudoElementReference;
@@ -6236,7 +6240,8 @@ var mixin = { // return value is combination Hypermatic namespace and React mixi
 				var presentation = this.state[key];
 				if (!presentation && presentation !== 0) presentation = previous;
 				var typeObject = getType(key,newState[key]);
-				var rawValue = typeObject.fromCssValue(newState[key]);
+				//var rawValue = typeObject.fromCssValue(newState[key]);
+				var rawValue = fromCssValue(key,newState[key]);
 				var animation = kxdxImplicitAnimation(key,this,newState[key],previous,presentation,zero);
 				if (animation) {
 					this._hyperAnimationProperties().baseValues[key] = rawValue; // baseValue does not get set if you explicitly animate.
