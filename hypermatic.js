@@ -4946,7 +4946,6 @@ var BlendedCompositableValue = function(startValue, endValue, fraction) {
 BlendedCompositableValue.prototype = createObject(
 	CompositableValue.prototype, {
 		compositeOnto: function(property, underlyingRawValue) {
-			if (verboseSafariGetComputedStyle) console.log("BlendedCompositableValue compositeOnto property:%s; rawValue:%s;",property,JSON.stringify(underlyingRawValue));
 			return interpolate(property,
 				this.startValue.compositeOnto(property, underlyingRawValue),
 				this.endValue.compositeOnto(property, underlyingRawValue),
@@ -5091,10 +5090,6 @@ CompositedStateMap.prototype = {
 
 
 
-var verboseSafariGetComputedStyle = false;
-
-
-
 function COMPOSITED_PROPERTY_MAP() {}
 /** @constructor */
 var CompositedPropertyMap = function(target) { // CompositedPropertyMap
@@ -5140,10 +5135,6 @@ CompositedPropertyMap.prototype = {
 	
 	captureBaseValues: function() { // FORCES RECALCULATION // called from Compositor applyAnimatedValues which is called from ticker
 		
-		// This is target for optimization to prevent layout thrashing.
-		// Why capture base values at every frame?
-		// Style sheet or className changes are the problem.
-		
 		for (var property in this.properties) {
 			var stack = this.properties[property];
 			if (stack.length > 0 && this.stackDependsOnUnderlyingValue(stack)) {
@@ -5152,7 +5143,6 @@ CompositedPropertyMap.prototype = {
 				var prefixedProperty = property;
 				if (property === 'transform') {
 					prefixedProperty = features.transformProperty;
-					if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues transform prefixedProperty:%s;",prefixedProperty);
 				}
 				var cssValue;
 				if (propertyIsSVGAttrib(property, target)) { // TODO: unsure about SVG. prefixes?
@@ -5161,10 +5151,8 @@ CompositedPropertyMap.prototype = {
 					//var computed = getComputedStyle(target);
 					var computed = window.getComputedStyle(target); // Safari fail...
 					var computedProperty = computed[prefixedProperty];
-					if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues computedProperty:%s; nonPrefixed:%s;",computedProperty,computed[property]);
 					if (prefixedProperty === features.transformProperty) { // preserve transform functions for addition. getComputedStyle returns matrix
 						var inline = this.target.style._surrogateElement.style[prefixedProperty]; // accessing private ...
-						if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues inline:%s;",inline);
 						if (isDefinedAndNotNull(inline) && inline.length) computedProperty = inline;
 						else {
 							var matrixRegex = /^matrix/; // why does Chrome getComputedStyle with rotate(-180deg) give a matrix with scientific notation? Must convert.
@@ -5176,11 +5164,9 @@ CompositedPropertyMap.prototype = {
 					}
 					cssValue = computedProperty;
 				}
-				if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues property:%s; cssValue:%s;",property,cssValue);		
 				var typeObject = getType(property,cssValue);
 				//var baseValue = typeObject.fromCssValue(cssValue);
 				var baseValue = fromCssValue(property,cssValue);
-				if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues type:%s; baseValue:%s;",typeObject.toString(),JSON.stringify(baseValue));
 				// TODO: Decide what to do with elements not in the DOM.
 				ASSERT_ENABLED && assert( isDefinedAndNotNull(baseValue) && baseValue !== '', 'Base value should always be set. ' + 'Is the target element in the DOM?'); // CompositedPropertyMap
 				this.baseValues[property] = baseValue;
@@ -5199,13 +5185,11 @@ CompositedPropertyMap.prototype = {
 			this.properties[property] = [];
 			
 			var baseValue = this.baseValues[property]; // rawValue
-			if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap apply baseValue:%s;",JSON.stringify(baseValue));
 			var i = compositableValues.length - 1;
 			while (i > 0 && compositableValues[i].dependsOnUnderlyingValue()) {
 				i--;
 			}
 			for (; i < compositableValues.length; i++) {
-				if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap composite baseValue:%s;",JSON.stringify(baseValue));
 				baseValue = compositableValues[i].compositeOnto(property, baseValue);
 			}
 			ASSERT_ENABLED && assert( isDefinedAndNotNull(baseValue) && baseValue !== '', 'Value should always be set after compositing');
@@ -5250,11 +5234,9 @@ var copyInlineStyle = function(sourceStyle, destinationStyle) {
 };
 
 var retickThenGetComputedStyle = function() {
-	if (verboseSafariGetComputedStyle) console.log("??? retick isPatched:%s; original:%s;",isGetComputedStylePatched,originalGetComputedStyle);
 	if (isDefined(lastTickTime)) {
 		repeatLastTick();
 	} else {
-		if (verboseSafariGetComputedStyle) console.log("??? retickThenGetComputedStyle ensure");
 		ensureOriginalGetComputedStyle(); // added to prevent unterminated
 	}
 	// ticker() will restore getComputedStyle() back to normal.
@@ -5265,9 +5247,7 @@ var retickThenGetComputedStyle = function() {
 // function object equality during an animation.
 var isGetComputedStylePatched = false;
 var originalGetComputedStyle = window.getComputedStyle;
-if (verboseSafariGetComputedStyle) console.log("??? top originalGetComputedStyle:%s;",originalGetComputedStyle);
 var ensureRetickBeforeGetComputedStyle = function() {
-	if (verboseSafariGetComputedStyle) console.log("??? ensureRetick isPatched:%s; original:%s;",isGetComputedStylePatched,originalGetComputedStyle);
 	if (!isGetComputedStylePatched) {
 		Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
 			value: retickThenGetComputedStyle
@@ -5277,7 +5257,6 @@ var ensureRetickBeforeGetComputedStyle = function() {
 };
 
 var ensureOriginalGetComputedStyle = function() {
-	if (verboseSafariGetComputedStyle) console.log("??? ensureOriginal isPatched:%s; original:%s;",isGetComputedStylePatched,originalGetComputedStyle);
 	if (isGetComputedStylePatched) {
 		Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
 			value: originalGetComputedStyle
@@ -5418,7 +5397,6 @@ for (var property in document.documentElement.style) {
 				return value;
 			},
 			set: function(value) {
-				if (verboseSafariGetComputedStyle) console.log("===> AnimatedCSSStyleDeclaration SET property:%s; value:%s; type:%s;",property,value,getType(property,value).toString());
 				var previous = this._surrogateElement.style[property];
 				var presentation = this._style[property];
 				var zero = getType(property,value).zero().d;
@@ -5436,7 +5414,6 @@ for (var property in document.documentElement.style) {
 					animation = kxdxAnimationFromDescription(description);
 					player._addAnimation(animation);
 				}
-				if (verboseSafariGetComputedStyle) console.log("animation:%s;",animation);
 				this._surrogateElement.style[property] = value;
 				this._updateIndices();
 				// if (!this._isAnimatedProperty[property]) this._style[property] = value; // ORIGINAL
@@ -5469,7 +5446,6 @@ var patchInlineStyleForAnimation = function(style) {
 				return function() {
 					var result = surrogateElement.style[method].apply(
 							surrogateElement.style, arguments);
-							if (verboseSafariGetComputedStyle) console.log("patchInlineStyleForAnimation result:%s;",result);
 					if (modifiesStyle) {
 						if (!isAnimatedProperty[arguments[0]]) {
 							originalMethod.apply(style, arguments);
@@ -5488,7 +5464,6 @@ var patchInlineStyleForAnimation = function(style) {
 	};
 
 	style._setAnimatedProperty = function(property, value) {
-		if (verboseSafariGetComputedStyle) console.log("????? patched style._setAnimatedProperty:%s; value:%s;",property,value);
 		this[property] = value;
 		isAnimatedProperty[property] = true;
 	};
@@ -5529,7 +5504,6 @@ Compositor.prototype = {
 	setAnimatedValue: function(target, property, compositableValue) { // called from BasicEffect _sample from Animation _sample from ticker as it loops through each sorted animation
 		if (target !== null) {
 			var compositedPropertyMap = hyperAnimationProperties.apply(target);
-			//if (verboseSafariGetComputedStyle) console.log("!!! compositor setAnimatedValue:%s; property:%s; target:%s;",JSON.stringify(compositableValue),property,target);
 			compositedPropertyMap.addValue(property, compositableValue);
 		}
 	},
@@ -5561,7 +5535,6 @@ Compositor.prototype = {
 
 
 var ensureTargetInitialized = function(property, target) {
-	if (verboseSafariGetComputedStyle) console.log("===> ensureTargetInitialized:%s; property:%s;",target,property);
 	if (propertyIsSVGAttrib(property, target)) {
 		ensureTargetSVGInitialized(property, target);
 	} else {
@@ -5613,13 +5586,11 @@ var ensureTargetSVGInitialized = function(property, target) {
 };
 
 var ensureTargetCSSInitialized = function(target) {
-	if (verboseSafariGetComputedStyle) console.log("===> ensureTargetCSSInitialized:%s;",target);
 	if (target.style._webAnimationsStyleInitialized) {
 		return;
 	}
 	try {
 		var animatedStyle = new AnimatedCSSStyleDeclaration(target);
-		if (verboseSafariGetComputedStyle) console.log("===> ensureTargetCSSInitialized new:%s;",animatedStyle);
 		Object.defineProperty(target, 'style', configureDescriptor({
 			get: function() { 
 				return animatedStyle;
