@@ -305,8 +305,6 @@ $("input").on("click", function () {
 		easing:triangleBounce
 	});
 	
-	//if (!this.checked) document.timeline.play(new Animation(subContainer, { display:"block"}, { duration:duration, easing:"step-start", fill:"none" }));
-	
 	if (!this.checked) subContainer.hypermatic({
 		type:"display",
 		from:"block",
@@ -341,10 +339,10 @@ $("input").on("click", function () {
 	
 	var clipY = window.pageYOffset;
 	if (clipY != scrollY) {
-		document.body.hypermatic({
+		container.hypermatic({
 			type:"transform",
 			from:"translate3d(0,"+clipY+",0)",
-			from:"translate3d(0,"+scrollY+",0)",
+			to:"translate3d(0,"+scrollY+",0)",
 			duration:duration,
 			easing:defaultBounce
 		});
