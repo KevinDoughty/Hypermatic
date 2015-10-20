@@ -340,8 +340,36 @@ var toggle = function() {
 		});	
 	}
 	
-	if (toggled) document.body.className = "two";
-	else document.body.className = "one";
+	if (toggled) {
+		//document.body.className = "two";
+		
+		blue.style.transform = "translate3d(400px,400px,0)";
+		blue.style.webkitTransform = "translate3d(400px,400px,0)";
+
+		green.style.transform = "translate3d(100px,100px,0)";
+		green.style.webkitTransform = "translate3d(100px,100px,0)";
+
+		orange.style.transform = "translate3d(0px,0px,0)";
+		orange.style.webkitTransform = "translate3d(0px,0px,0)";
+	
+		purple.style.transform = "translate3d(300px,300px,0)";
+		purple.style.webkitTransform = "translate3d(300px,300px,0)";
+
+	} else {
+		//document.body.className = "one";
+		
+		blue.style.transform = "translate3d(0px,0px,0)";
+		blue.style.webkitTransform = "translate3d(0px,0px,0)";
+
+		green.style.transform = "translate3d(300px,300px,0)";
+		green.style.webkitTransform = "translate3d(300px,300px,0)";
+
+		orange.style.transform = "translate3d(0px,400px,0)";
+		orange.style.webkitTransform = "translate3d(0px,400px,0)";
+	
+		purple.style.transform = "translate3d(400px,0px,0)";
+		purple.style.webkitTransform = "translate3d(400px,0px,0)";
+	}
 
 }
 

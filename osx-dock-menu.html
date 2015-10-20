@@ -160,15 +160,15 @@ body {
 </ul>
 <div class="base" id="base"></div></div></div>
 </body>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
 <script type="text/javascript" src="https://rawgit.com/web-animations/web-animations-js-legacy/93373af41ac6b6a0211517d5414b2943a4a87299/web-animations.js"></script>
 <script type="text/javascript" src="https://rawgit.com/KevinDoughty/Hypermatic/1764eade613f7230ff5e7148d909d24771629d43/hypermatic.js"></script>
 <script type="text/javascript">
 // Animation by Kevin Doughty using the Hypermatic jQuery plugin which uses the Web Animations javascript shim.
 // This is based on CSS by Tomomi Imura http://girliemac.com/blog/2010/06/02/simulating-macos-dock-like-menu-with-css3/
 
-var fastDuration = 1;
-var slowDuration = 30;
+var fastDuration = 0.5;
+var slowDuration = 10;
 var omega = 20;
 var zeta = 0.5;
 var itemWidth = 64;
@@ -206,7 +206,8 @@ function hyperAnimate(element,type,unit,old,nu,direction) {
 		type:type,
 		unit:unit,
 		duration:(shiftKeyPressed ? slowDuration : fastDuration),
-		easing:callback,
+		//easing:callback,
+		easing:"cubic-bezier(0.5,0.0,0.5,1.0)",
 		values:direction ? [old,nu] : [nu,old]
 	});
 }
