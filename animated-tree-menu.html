@@ -262,23 +262,24 @@ li input[type=checkbox]:checked ~ div {
 
 <script type="text/javascript">
 // Hypermatic animation by Kevin Doughty http://kxdx.org using https://github.com/web-animations/web-animations-js/ and https://github.com/KevinDoughty/Hypermatic/
+// All benefits of using jQuery are lost because Hypermatic directly extends DOM elements
 
 var scrollY = 0;
 var underneathSibling = null;
 var shiftKeyPressed = false;
 var fromY = 0;
 
-document.addEventListener('keydown',toggleKeys,false);
-document.addEventListener('keyup',toggleKeys,false);
+document.addEventListener("keydown",toggleKeys,false);
+document.addEventListener("keyup",toggleKeys,false);
 window.onscroll = scroll;
 
-$("input, label").on('mousedown', function () {
+$("input, label").on("mousedown", function () {
 	var container = document.getElementById("tree");
 	underneathSibling = underneathSiblingOfElement(this,container);
 	if (underneathSibling) fromY = underneathSibling.offsetTop;
 });
 
-$("input").on('click', function () {
+$("input").on("click", function () {
 
 	var duration = 0.75 * ((shiftKeyPressed) ? 10 : 1);
 	
@@ -292,14 +293,14 @@ $("input").on('click', function () {
 	if (this.checked) toOpacity = 1;
 	else fromOpacity = 1;
 	
-	var listItem = $(this).closest('li');
-	var label = $(listItem).children('label')[0];
-	var subContainer = $(listItem).children('ol')[0];
-	var triangle = $(listItem).children('div')[0];
+	var listItem = $(this).closest("li")[0];
+	var label = $(listItem).children("label")[0];
+	var subContainer = $(listItem).children("ol")[0];
+	var triangle = $(listItem).children("div")[0];
 
 	$(triangle).hypermatic({
-		type:'rotate',
-		unit:'deg',
+		type:"rotate",
+		unit:"deg",
 		duration:duration,
 		easing:triangleBounce,
 		values:[fromDegrees,toDegrees]
@@ -308,20 +309,20 @@ $("input").on('click', function () {
 	if (!this.checked) document.timeline.play(new Animation(subContainer, { display:"block"}, { duration:duration, easing:"step-start", fill:"none" }));
 	
 	$(subContainer).hypermatic({
-		type:'opacity',
+		type:"opacity",
 		duration:duration,
 		easing:opacityBounce,
 		values:[fromOpacity,toOpacity]
 	});
 	
-	var container = $(this).closest('.tree')[0];
+	var container = $(this).closest(".tree")[0];
 	underneathSibling = underneathSiblingOfElement(this,container);
 	if (underneathSibling) {
 		var toY = underneathSibling.offsetTop;
 		do {
 			$(underneathSibling).hypermatic({
-				type:'translate3d',
-				unit:'px',
+				type:"translate3d",
+				unit:"px",
 				duration:duration,
 				easing:defaultBounce,
 				values:[0,0,fromY,toY,0,0]
@@ -332,8 +333,8 @@ $("input").on('click', function () {
 	var clipY = window.pageYOffset;
 	if (clipY != scrollY) {
 		$(document.body).hypermatic({
-			type:'translate',
-			unit:'px',
+			type:"translate",
+			unit:"px",
 			duration:duration,
 			easing:defaultBounce,
 			values:[0,0,clipY,scrollY]
