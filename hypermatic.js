@@ -16,7 +16,6 @@
  
  // This is a derivative work of:
  // https://github.com/web-animations/web-animations-js-legacy
- // Code has been heavily modified.
 
  /**
  * Copyright 2012 Google Inc. All Rights Reserved.
@@ -115,8 +114,7 @@ TimingDict.prototype = {
 	fill : 'none',
 	iterationStart: 0,
 	iterations: 1,
-	duration: 'auto', // original. Auto needed for groups. I would prefer 0
-	//duration: 0,
+	duration: 'auto',
 	playbackRate: 1,
 	direction: 'normal',
 	easing: 'linear'
@@ -268,6 +266,10 @@ function PLAYER() {}
 var playersAreSorted = false;
 var playerSequenceNumber = 0;
 
+
+
+var verboseTime = false;
+
 /** @constructor */
 var Player = function(token, timeline, target) {
 	if (token !== PRIVATE) throw new TypeError('Illegal constructor');
@@ -303,12 +305,12 @@ Player.prototype = {
 			// TODO: be sure setting start time does not affect groups or child animations adversely.
 			if (animation._startTime === null || animation._startTime == undefined) animation._startTime = this.timeline.currentTime === null ? 0 : this.timeline.currentTime; // added as fix for player refactoring, previously animation startTime was always zero
 			
-			if (!isDefinedAndNotNull(key) && isDefinedAndNotNull(animation._hyperKey)) {
-				key = animation._hyperKey;
+			if (!isDefinedAndNotNull(key) && isDefinedAndNotNull(animation._hyperName)) {
+				key = animation._hyperName;
 			}
 			
 			if (isDefinedAndNotNull(key)) {
-				if (animation._hyperIncrementName) { // this is not good, the way I set _hyperKey and _hyperIncrementName
+				if (animation._hyperIncrementName) { // this is not good, the way I set _hyperName and _hyperIncrementName
 					var increment = this._namedAnimationCounter[key];
 					if (!increment) increment = 0;
 					this._namedAnimationCounter[key] = increment + 1;
@@ -316,13 +318,12 @@ Player.prototype = {
 					else key = key + increment;
 					
 				}
-				animation._hyperKey = key;
+				animation._hyperName = key;
 				if (this._namedAnimations[key]) {
 					this._removeAnimationNamed(key); // remove existing animation with same key
 				}
 				this._namedAnimations[key] = animation;
 			}
-			
 			this._animations.push(animation);
 			this._animationsAreSorted = false;
 			this._registerOnTimeline();
@@ -333,6 +334,7 @@ Player.prototype = {
 	},
 	_removeAnimation: function(animation) {
 		var index = this._animations.indexOf(animation);
+		//console.log("_removeAnimation at index:%s;",index);
 		if (index > -1) this._removeAnimationAtIndex(index);
 		else console.log("groups probably need to be scanned to remove animation");
 	},
@@ -346,7 +348,7 @@ Player.prototype = {
 	},
 	_removeAnimationAtIndex: function(index) {
 		var animation = this._animations[index];
-		var key = animation._hyperKey;
+		var key = animation._hyperName;
 		if (isDefinedAndNotNull(key)) {
 			delete this._namedAnimations[key];
 		}
@@ -403,7 +405,7 @@ Player.prototype = {
 	},
 	get _currentTime() {
 		if (this.timeline.currentTime === null) {
-			//console.log("timeline.currentTime is null !!!");
+			console.log("timeline.currentTime is null !!!");
 			return null;
 		}
 		return isDefined(this._pauseTime) ? this._pauseTime : (this.timeline.currentTime - this.startTime) * this.playbackRate - this._timeDrift;
@@ -501,7 +503,7 @@ Player.prototype = {
 	_registerOnTimeline: function() {
 		if (!this._registeredOnTimeline) {
 			if (!isCustomObject(this._target)) this._timeline._stylePlayers.push(this);
-			else this._timeline._statePlayers.push(this);
+			else	this._timeline._statePlayers.push(this);
 			this._registeredOnTimeline = true;
 		}
 	},
@@ -538,7 +540,7 @@ var TimedItem = function(token, timingInput) {
 	this._sequenceNumber = TimedItem.count++;
 
 	this._hyperIndex = 0;
-	this._hyperKey = null;
+	this._hyperName = null;
 	this._hyperIncrementName = false;
 	this._hyperDict = shallowObjectCopy(timingInput);
 	
@@ -1861,8 +1863,6 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
 		var frames = this._propertySpecificKeyframes();
 		for (var property in frames) {
 			var sample = this._sampleForProperty(frames[property], timeFraction, currentIteration);
-			//console.log("sample:%s;",JSON.stringify(sample));
-			//sample:{"startValue":{"value":[{"t":"translate3d","d":[{"px":0},{"px":36},{"px":0}]}],"typeObject":{},"composite":"add"},"endValue":{"value":[{"t":"translate3d","d":[{"px":0},{"px":0},{"px":0}]}],"typeObject":{},"composite":"add"},"fraction":0.9979470289616761};
 			compositor.setAnimatedValue(target, property, sample);
 		}
 	},
@@ -1957,19 +1957,19 @@ KeyframeEffect.prototype = createObject(AnimationEffect.prototype, {
 						lastCssValue = rawNeutralValue;
 					}
 					var typeObject = getType(property, lastCssValue);
-					var lastRawValue = fromCssValue(property, lastCssValue);
-					//var lastRawValue = typeObject.fromCssValue(lastCssValue);
+					//var lastRawValue = fromCssValue(property, lastCssValue);
+					var lastRawValue = typeObject.fromCssValue(lastCssValue);
 					var specifiedCssValue = frame.cssValues[property];
 					if (specifiedCssValue === undefined || specifiedCssValue === null) { // cannot happen because the property is in frame.cssValues
 						specifiedCssValue = rawNeutralValue;
 					}
-					var specifiedRawValue = fromCssValue(property, specifiedCssValue);
-					//var specifiedRawValue = typeObject.fromCssValue(specifiedCssValue);
+					//var specifiedRawValue = fromCssValue(property, specifiedCssValue);
+					var specifiedRawValue = typeObject.fromCssValue(specifiedCssValue);
 					var actualRawValue = typeObject.subtract(specifiedRawValue, lastRawValue);
 					if (this._inversed) actualRawValue = typeObject.inverse(actualRawValue);
 					var actualCssValue = typeObject.toCssValue(actualRawValue);
 					var propertyKeyframe = new PropertySpecificKeyframe(frame.offset, property, actualCssValue, actualRawValue); // (offset, property, cssValue, optionalRawValue)
-					this._cachedPropertySpecificKeyframes[property].unshift(propertyKeyframe);
+					this._cachedPropertySpecificKeyframes[property].unshift(propertyKeyframe); // unshift makes logging confusing...
 				}
 			}
 		} else {
@@ -2168,9 +2168,9 @@ var PropertySpecificKeyframe = function(offset, property, cssValue, optionalRawV
 PropertySpecificKeyframe.prototype = {
 	rawValue: function() {
 		if (!isDefinedAndNotNull(this.cachedRawValue)) {
-			this.cachedRawValue = fromCssValue(this.property, this.cssValue);
-			//var typeObject = getType(this.property,this.cssValue);
-			//this.cachedRawValue = typeObject.fromCssValue(this.cssValue);
+			//this.cachedRawValue = fromCssValue(this.property, this.cssValue);
+			var typeObject = getType(this.property,this.cssValue);
+			this.cachedRawValue = typeObject.fromCssValue(this.cssValue);
 		}
 		return this.cachedRawValue;
 	}
@@ -4577,7 +4577,6 @@ var transformType = {
 		if (value === undefined) {
 			return undefined;
 		}
-		if (value === "none") console.log("N-O-N-E");
 		var result = [];
 		while (value.length > 0) {
 			var r;
@@ -4657,7 +4656,6 @@ var propertyTypes = {
 	textShadow: shadowType,
 	top: percentLengthAutoType,
 	transform: transformType,
-	WebkitTransform: transformType, // React?
 	webkitTransform: transformType, // temporary
 	msTransform: transformType, // temporary
 	
@@ -4767,8 +4765,8 @@ var propertyValueAliases = {
 	},
 	top: { initial: 'auto' },
 	transform: {
-		initial: "matrix(1, 0, 0, 1, 0, 0)",
-		none: "matrix(1, 0, 0, 1, 0, 0)"
+		initial: '',
+		none: ''
 	},
 	verticalAlign: { initial: '0px' },
 	visibility: { initial: 'visible' },
@@ -4789,7 +4787,8 @@ var getCssOnlyType = function(property) {
 	return propertyTypes[property] || nonNumericType;
 };
 
-var getType = function(property,cssValue) { // syntax?
+
+var getType = function(property,cssValue) { // should be css value
 	var type = propertyTypes[property];
 	if (!type) {
 		if (isNumber(cssValue)) type = numberType;
@@ -4870,7 +4869,8 @@ var toCssValue = function(property, value, svgMode) { // Only used by Composited
 	return getCssOnlyType(property,value).toCssValue(value, svgMode);
 };
 
-var fromCssValue = function(property, cssValue) { // TODO: use this
+var fromCssValue = function(property, cssValue) {
+	console.log("fromCssValue deprecated");
 	if (cssValue === cssNeutralValue) return rawNeutralValue;
 	if (cssValue === 'inherit') return value;
 	if (property in propertyValueAliases && cssValue in propertyValueAliases[property]) {
@@ -4946,6 +4946,7 @@ var BlendedCompositableValue = function(startValue, endValue, fraction) {
 BlendedCompositableValue.prototype = createObject(
 	CompositableValue.prototype, {
 		compositeOnto: function(property, underlyingRawValue) {
+			if (verboseSafariGetComputedStyle) console.log("BlendedCompositableValue compositeOnto property:%s; rawValue:%s;",property,JSON.stringify(underlyingRawValue));
 			return interpolate(property,
 				this.startValue.compositeOnto(property, underlyingRawValue),
 				this.endValue.compositeOnto(property, underlyingRawValue),
@@ -5008,7 +5009,10 @@ var CompositedStateMap = function(target,attribute) { // CompositedPropertyMap
 	this.baseValues = {};
 	this.target = target;
 	this.attribute = attribute;
-	this.animatedValues = {};	
+	this.animatedValues = {};
+	this.timeFractions = {}; // complete fail.
+	this.needsUpdate = {}
+	
 };
 
 CompositedStateMap.prototype = {
@@ -5017,7 +5021,21 @@ CompositedStateMap.prototype = {
 			this.properties[property] = [];
 		}
 		if (!(animValue instanceof CompositableValue)) throw new TypeError('expected CompositableValue');
-		this.properties[property].push(animValue);
+
+		if (animValue instanceof BlendedCompositableValue) {
+			var oldTime = this.timeFractions[property]; // complete fail.
+			var newTime = animValue.fraction; // complete fail.
+			
+			this.timeFractions[property] = newTime; // complete fail.
+			if (true || oldTime != newTime) this.properties[property].push(animValue); // can't selectively block by comparing oldTime & newTime
+		} else if (animValue instanceof AddReplaceCompositableValue) {
+			var oldTime = this.timeFractions[property];
+			var newTime = animValue.optionalTimeFractionForStateAnimation
+			this.timeFractions[property] = newTime; // complete fail.
+			if (true || oldTime != newTime) this.properties[property].push(animValue); // can't selectively block by comparing oldTime & newTime
+		} else {
+			this.properties[property].push(animValue);
+		}
 	},
 	stackDependsOnUnderlyingValue: function(stack) {
 		for (var i = 0; i < stack.length; i++) {
@@ -5042,8 +5060,7 @@ CompositedStateMap.prototype = {
 			var typeObject = getType(property,baseCssValue);
 		
 			if (!isDefinedAndNotNull(baseValue)) {
-		 		//baseValue = typeObject.fromCssValue(baseCssValue);
-		 		baseValue = fromCssValue(property,baseCssValue);
+		 		baseValue = typeObject.fromCssValue(baseCssValue);
 		 		this.baseValues[property] = baseValue;
 			}
 			if (compositableValues.length) {
@@ -5090,6 +5107,10 @@ CompositedStateMap.prototype = {
 
 
 
+var verboseSafariGetComputedStyle = false;
+
+
+
 function COMPOSITED_PROPERTY_MAP() {}
 /** @constructor */
 var CompositedPropertyMap = function(target) { // CompositedPropertyMap
@@ -5116,7 +5137,7 @@ CompositedPropertyMap.prototype = {
 		}
 		return true;
 	},
-	clear: function() { // from Compositor applyAnimatedValues from ticker // clearValue calls target.style._clearAnimatedProperty(property) which copies over from _surrogateElement to real inline style, in preparation for getComputedStyle
+	clear: function() { // CompositedPropertyMap // from Compositor applyAnimatedValues from ticker // clearValue calls target.style._clearAnimatedProperty(property) which copies over from _surrogateElement to real inline style, in preparation for getComputedStyle
 		for (var property in this.properties) {
 			if (this.stackDependsOnUnderlyingValue(this.properties[property])) {
 				var target = this.target;
@@ -5132,9 +5153,7 @@ CompositedPropertyMap.prototype = {
 			}
 		}
 	},
-	
-	captureBaseValues: function() { // FORCES RECALCULATION // called from Compositor applyAnimatedValues which is called from ticker
-		
+	captureBaseValues: function() { // called from Compositor applyAnimatedValues which is called from ticker
 		for (var property in this.properties) {
 			var stack = this.properties[property];
 			if (stack.length > 0 && this.stackDependsOnUnderlyingValue(stack)) {
@@ -5142,17 +5161,28 @@ CompositedPropertyMap.prototype = {
 				ensureTargetInitialized(property, target);
 				var prefixedProperty = property;
 				if (property === 'transform') {
+					//property = features.transformProperty;
 					prefixedProperty = features.transformProperty;
+					if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues transform prefixedProperty:%s;",prefixedProperty);
 				}
 				var cssValue;
-				if (propertyIsSVGAttrib(property, target)) { // TODO: unsure about SVG. prefixes?
-					cssValue = target.actuals[property];
+				//if (propertyIsSVGAttrib(property, target)) { // original
+				if (propertyIsSVGAttrib(prefixedProperty, target)) { // TODO: unsure about SVG, do I want prefixed or un-prefixed?
+					//cssValue = target.actuals[property]; // original
+					cssValue = target.actuals[prefixedProperty];
 				} else {
 					//var computed = getComputedStyle(target);
 					var computed = window.getComputedStyle(target); // Safari fail...
+					//var computedProperty = computed[property];
+					//console.log("CompositedPropertyMap captureBaseValues computed:%s;",JSON.stringify(computed));
+					var computedNonPrefixedProperty = computed[property];
 					var computedProperty = computed[prefixedProperty];
+					if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues computedProperty:%s; nonPrefixed:%s;",computedProperty,computedNonPrefixedProperty);
+					//if (property === features.transformProperty) { // original // preserve transform functions for addition. getComputedStyle returns matrix
 					if (prefixedProperty === features.transformProperty) { // preserve transform functions for addition. getComputedStyle returns matrix
-						var inline = this.target.style._surrogateElement.style[prefixedProperty]; // accessing private ...
+						//var inline = this.target.style._surrogateElement.style[property]; // original
+						var inline = this.target.style._surrogateElement.style[prefixedProperty];
+						if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues inline:%s;",inline);
 						if (isDefinedAndNotNull(inline) && inline.length) computedProperty = inline;
 						else {
 							var matrixRegex = /^matrix/; // why does Chrome getComputedStyle with rotate(-180deg) give a matrix with scientific notation? Must convert.
@@ -5164,9 +5194,13 @@ CompositedPropertyMap.prototype = {
 					}
 					cssValue = computedProperty;
 				}
+				if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues property:%s; cssValue:%s;",property,cssValue);		
 				var typeObject = getType(property,cssValue);
-				//var baseValue = typeObject.fromCssValue(cssValue);
-				var baseValue = fromCssValue(property,cssValue);
+				var baseValue = typeObject.fromCssValue(cssValue);
+				if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap captureBaseValues type:%s; baseValue:%s;",typeObject.toString(),JSON.stringify(baseValue));
+				// Chrome: type:transformType; baseValue:[{"t":"rotate","d":[72]}];
+				// Safari: type:nonNumericType; baseValue:"rotate(72deg)";
+				
 				// TODO: Decide what to do with elements not in the DOM.
 				ASSERT_ENABLED && assert( isDefinedAndNotNull(baseValue) && baseValue !== '', 'Base value should always be set. ' + 'Is the target element in the DOM?'); // CompositedPropertyMap
 				this.baseValues[property] = baseValue;
@@ -5175,7 +5209,6 @@ CompositedPropertyMap.prototype = {
 			}
 		}
 	},
-	
 	applyAnimatedValues: function() { // called from Compositor applyAnimatedValues which is called from ticker
 		for (var property in this.properties) {
 			var compositableValues = this.properties[property];
@@ -5185,11 +5218,13 @@ CompositedPropertyMap.prototype = {
 			this.properties[property] = [];
 			
 			var baseValue = this.baseValues[property]; // rawValue
+			if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap apply baseValue:%s;",JSON.stringify(baseValue));
 			var i = compositableValues.length - 1;
 			while (i > 0 && compositableValues[i].dependsOnUnderlyingValue()) {
 				i--;
 			}
 			for (; i < compositableValues.length; i++) {
+				if (verboseSafariGetComputedStyle) console.log("CompositedPropertyMap composite baseValue:%s;",JSON.stringify(baseValue));
 				baseValue = compositableValues[i].compositeOnto(property, baseValue);
 			}
 			ASSERT_ENABLED && assert( isDefinedAndNotNull(baseValue) && baseValue !== '', 'Value should always be set after compositing');
@@ -5234,9 +5269,11 @@ var copyInlineStyle = function(sourceStyle, destinationStyle) {
 };
 
 var retickThenGetComputedStyle = function() {
+	if (verboseSafariGetComputedStyle) console.log("??? retick isPatched:%s; original:%s;",isGetComputedStylePatched,originalGetComputedStyle);
 	if (isDefined(lastTickTime)) {
 		repeatLastTick();
 	} else {
+		if (verboseSafariGetComputedStyle) console.log("??? retickThenGetComputedStyle ensure");
 		ensureOriginalGetComputedStyle(); // added to prevent unterminated
 	}
 	// ticker() will restore getComputedStyle() back to normal.
@@ -5247,7 +5284,9 @@ var retickThenGetComputedStyle = function() {
 // function object equality during an animation.
 var isGetComputedStylePatched = false;
 var originalGetComputedStyle = window.getComputedStyle;
+if (verboseSafariGetComputedStyle) console.log("??? top originalGetComputedStyle:%s;",originalGetComputedStyle);
 var ensureRetickBeforeGetComputedStyle = function() {
+	if (verboseSafariGetComputedStyle) console.log("??? ensureRetick isPatched:%s; original:%s;",isGetComputedStylePatched,originalGetComputedStyle);
 	if (!isGetComputedStylePatched) {
 		Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
 			value: retickThenGetComputedStyle
@@ -5257,6 +5296,7 @@ var ensureRetickBeforeGetComputedStyle = function() {
 };
 
 var ensureOriginalGetComputedStyle = function() {
+	if (verboseSafariGetComputedStyle) console.log("??? ensureOriginal isPatched:%s; original:%s;",isGetComputedStylePatched,originalGetComputedStyle);
 	if (isGetComputedStylePatched) {
 		Object.defineProperty(window, 'getComputedStyle', configureDescriptor({
 			value: originalGetComputedStyle
@@ -5353,15 +5393,15 @@ AnimatedCSSStyleDeclaration.prototype = {
 			});
 		}
 	},
-	_restoreProperty: function(property) { // from _clearAnimatedProperty (below)
-			this._style[property] = this._surrogateElement.style[property]; // INVALIDATES STYLE but gets forced in CompositedPropertyMap captureBaseValues
+	_restoreProperty: function(property) {
+			this._style[property] = this._surrogateElement.style[property];
 	},
 	_clearAnimatedProperty: function(property) {
 		this._restoreProperty(property);
 		this._isAnimatedProperty[property] = false;
 	},
 	_setAnimatedProperty: function(property, value) { // called from setValue() from CompositedPropertyMap applyAnimatedValues
-		this._style[property] = value; // INVALIDATES STYLE // sets element.style when animating
+		this._style[property] = value; // sets element.style when animating
 		this._isAnimatedProperty[property] = true;
 	}
 };
@@ -5397,27 +5437,25 @@ for (var property in document.documentElement.style) {
 				return value;
 			},
 			set: function(value) {
+				// I would prefer to collect all this only after I know there is an implicit animation:
+				//if (verboseSafariGetComputedStyle) 
+				//console.log("===> AnimatedCSSStyleDeclaration SET property:%s; value:%s; type:%s;",property,value,getType(property,value).toString());
 				var previous = this._surrogateElement.style[property];
 				var presentation = this._style[property];
 				var zero = getType(property,value).zero().d;
 				if (!zero && zero !== 0) zero = getType(property,value).zero();
-				var player = this._element.hyperPlayer();
-				var animation = kxdxImplicitAnimation(property,this._element,value,previous,presentation,zero);
+				
+				var animation = kxdxImplicitAnimation(property,this._element,value,previous,presentation,zero); // this is ridiculous, but needed because of state animation
 				if (animation) {
-					this._isAnimatedProperty[property] = true; 
-					player._addAnimation(animation);
-				} else {
-					var description = { // Create animation for every property change... does not happen if AnimatedCSSStyleDeclaration does not exist !!! // Not just a hack to fix Safari flicker. Ensure style changes happen at animation frame tick, using existing methods.
-						type:property,
-						duration:0 // default duration is "auto"
-					};
-					animation = kxdxAnimationFromDescription(description);
+					this._isAnimatedProperty[property] = true;
+					var player = this._element.hyperPlayer();
 					player._addAnimation(animation);
 				}
 				this._surrogateElement.style[property] = value;
 				this._updateIndices();
-				// if (!this._isAnimatedProperty[property]) this._style[property] = value; // ORIGINAL
-				
+				if (!this._isAnimatedProperty[property]) {
+					this._style[property] = value;
+				}
 				animatedInlineStyleChanged();
 			}
 		}));
@@ -5446,6 +5484,7 @@ var patchInlineStyleForAnimation = function(style) {
 				return function() {
 					var result = surrogateElement.style[method].apply(
 							surrogateElement.style, arguments);
+							if (verboseSafariGetComputedStyle) console.log("patchInlineStyleForAnimation result:%s;",result);
 					if (modifiesStyle) {
 						if (!isAnimatedProperty[arguments[0]]) {
 							originalMethod.apply(style, arguments);
@@ -5464,6 +5503,7 @@ var patchInlineStyleForAnimation = function(style) {
 	};
 
 	style._setAnimatedProperty = function(property, value) {
+		if (verboseSafariGetComputedStyle) console.log("????? patched style._setAnimatedProperty:%s; value:%s;",property,value);
 		this[property] = value;
 		isAnimatedProperty[property] = true;
 	};
@@ -5504,10 +5544,11 @@ Compositor.prototype = {
 	setAnimatedValue: function(target, property, compositableValue) { // called from BasicEffect _sample from Animation _sample from ticker as it loops through each sorted animation
 		if (target !== null) {
 			var compositedPropertyMap = hyperAnimationProperties.apply(target);
+			if (verboseSafariGetComputedStyle) console.log("compositor setAnimatedValue:%s; property:%s; target:%s;",JSON.stringify(compositableValue),property,target);
 			compositedPropertyMap.addValue(property, compositableValue);
 		}
 	},
-	applyAnimatedValues: function(targets) { // called from ticker // Three separate loops needed to minimize layout thrashing
+	applyAnimatedValues: function(targets) { // called from ticker // loops through every element that ever animated, whether or not it's currently animating
 		for (var i = 0; i < targets.length; i++) {
 			var compositedPropertyMap;
 			var target = targets[i];
@@ -5520,7 +5561,8 @@ Compositor.prototype = {
 			var target = targets[i];
 			if (!isCustomObject(target)) compositedPropertyMap = target._animProperties;
 			else compositedPropertyMap = target._hyperAnimationProperties();
-			if (compositedPropertyMap) compositedPropertyMap.captureBaseValues(); // This could be optimized if you could ignore className & stylesheet changes.
+			if (compositedPropertyMap) compositedPropertyMap.captureBaseValues();
+			
 		}
 		for (var i = 0; i < targets.length; i++) {
 			var compositedPropertyMap;
@@ -5535,6 +5577,7 @@ Compositor.prototype = {
 
 
 var ensureTargetInitialized = function(property, target) {
+	if (verboseSafariGetComputedStyle) console.log("===> ensureTargetInitialized:%s; property:%s;",target,property);
 	if (propertyIsSVGAttrib(property, target)) {
 		ensureTargetSVGInitialized(property, target);
 	} else {
@@ -5586,11 +5629,13 @@ var ensureTargetSVGInitialized = function(property, target) {
 };
 
 var ensureTargetCSSInitialized = function(target) {
+	if (verboseSafariGetComputedStyle) console.log("===> ensureTargetCSSInitialized:%s;",target);
 	if (target.style._webAnimationsStyleInitialized) {
 		return;
 	}
 	try {
 		var animatedStyle = new AnimatedCSSStyleDeclaration(target);
+		if (verboseSafariGetComputedStyle) console.log("===> ensureTargetCSSInitialized new:%s;",animatedStyle);
 		Object.defineProperty(target, 'style', configureDescriptor({
 			get: function() { 
 				return animatedStyle;
@@ -5613,8 +5658,10 @@ var usePerformanceTiming =
 		typeof window.performance.timing === 'object' &&
 		typeof window.performance.now === 'function';
 
-// Don't use a local named requestAnimationFrame, to avoid potential problems with hoisting.
-var nativeRaf = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
+// Don't use a local named requestAnimationFrame, to avoid potential problems
+// with hoisting.
+var nativeRaf = window.requestAnimationFrame ||
+		window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
 var raf;
 if (nativeRaf) {
 	raf = function(callback) {
@@ -5750,8 +5797,11 @@ var debugTicker = false;
 function TICKER() {}
 
 
+
+
 var tickPlayers = function(playaz) {
 	
+		
 	var finished = true;
 	var paused = true;
 	var animations = [];
@@ -5771,9 +5821,9 @@ var tickPlayers = function(playaz) {
 		var finishedAnimations = [];
 		animations.forEach(function(animation) {
 			finished = finished && !animation._hasFutureAnimation(playDirectionForwards);
-			
 			if (!animation._hasFutureEffect()) {
 				finishedAnimations.push(animation);
+				var debugAnim = animation;
 			} else if (animation._isActive()) {
 				animation._sample(playa.target);
 			}
@@ -5805,36 +5855,6 @@ var tickPlayers = function(playaz) {
 };
 
 
-function transact() {
-	// Clear any modifications to getComputedStyle.
-	ensureOriginalGetComputedStyle(); // remove retick // Adding retick call to getComputedStyle is probably unnecessary trickery
-
-	var paused = true;
-	var finished = true;
-	var finishedPlayers = [];
-	
-	var returnState = tickPlayers(document.timeline._statePlayers,true);
-	if (returnState.finishedPlayers) finishedPlayers = finishedPlayers.concat(returnState.finishedPlayers);
-	paused = paused && returnState.paused;
-	finished = finished && returnState.finished;
-	
-	var returnStyle = tickPlayers(document.timeline._stylePlayers,false);
-	if (returnStyle.finishedPlayers) finishedPlayers = finishedPlayers.concat(returnStyle.finishedPlayers);
-	paused = paused && returnStyle.paused;
-	finished = finished && returnStyle.finished;
-	
-	playersAreSorted = true;
-	// Remove finished players. Warning: _deregisterFromTimeline modifies
-	// the PLAYER list. It should not be called from within a PLAYERS.forEach
-	// loop directly.
-	finishedPlayers.forEach(function(player) {
-		player._deregisterFromTimeline();
-		playersAreSorted = false;
-	});
-	
-	return finished;
-}
-
 var lastTickTime;
 var ticker = function(rafTime, isRepeat) {
 	// Don't tick till the page is loaded....
@@ -5852,8 +5872,39 @@ var ticker = function(rafTime, isRepeat) {
 		cachedClockTimeMillis = rafTime;
 	}
 	
-	var paused = false; // TODO: implement
-	var finished = transact();
+	// Clear any modifications to getComputedStyle.
+	ensureOriginalGetComputedStyle(); // remove retick // Adding retick call to getComputedStyle is probably unnecessary trickery
+
+	var paused = true;
+	var finished = true;
+	var finishedPlayers = [];
+	
+	var returnState = tickPlayers(document.timeline._statePlayers,true);
+	if (returnState.finishedPlayers) finishedPlayers = finishedPlayers.concat(returnState.finishedPlayers);
+	paused = paused && returnState.paused;
+	finished = finished && returnState.finished;
+	
+	var returnStyle = tickPlayers(document.timeline._stylePlayers,false);
+	if (returnStyle.finishedPlayers) finishedPlayers = finishedPlayers.concat(returnStyle.finishedPlayers);
+	paused = paused && returnStyle.paused;
+	finished = finished && returnStyle.finished;
+	
+	//console.log("tick:%s; style:%s; state:%s; finished:%s; isFinished:%s; isPaused:%s;",lastTickTime,document.timeline._stylePlayers,document.timeline._statePlayers,finishedPlayers,finished,paused);
+	/*
+	if (finished) {
+		if (document.timeline._stylePlayers.length + document.timeline._statePlayers.length != finishedPlayers.length) {
+			console.log("leaking animations! (unless kept around by fill) style:%s; state:%s; finished:%s;",document.timeline._stylePlayers,document.timeline._statePlayers,finishedPlayers);
+		}
+	}
+	*/
+	playersAreSorted = true;
+	// Remove finished players. Warning: _deregisterFromTimeline modifies
+	// the PLAYER list. It should not be called from within a PLAYERS.forEach
+	// loop directly.
+	finishedPlayers.forEach(function(player) {
+		player._deregisterFromTimeline();
+		playersAreSorted = false;
+	});
 	
 	if (!isRepeat) {
 		if (finished || paused) {
@@ -5899,7 +5950,12 @@ var kxdxAnimationFromDescription = function(description,depth) {
 	if (description) {
 		//if (description instanceof TimedItem) {
 		if (description instanceof HyperAnimation) {
+			//animation = description;
 			animation = new HyperAnimation(description.settings);
+			
+			// failing because of group
+			// probably has its own startTime
+			
 		} else if (Array.isArray(description)) {
 			if (!isDefinedAndNotNull(depth)) depth = 0
 			var array = description;
@@ -5990,10 +6046,10 @@ var kxdxImplicitAnimation = function (property,target,value,previous,presentatio
 		//console.log("implicitAnimation:%s;",JSON.stringify(implicitAnimation.settings));
 		// implicitAnimation:{"duration":5,"type":"webkitTransform","to":"translate3d(200px,0px,0) scale(1) rotate(0deg)","from":"","fill":"backwards"};
 		var naming = settings.naming;
-		//if (naming == "none") implicitAnimation._hyperKey = property;
-		if (naming === "exact") implicitAnimation._hyperKey = property;
-		else if (naming === "increment") implicitAnimation._hyperKey = property;
-		else if (ink === "absolute" && naming !== "none") implicitAnimation._hyperKey = property;
+		//if (naming == "none") implicitAnimation._hyperName = property;
+		if (naming === "exact") implicitAnimation._hyperName = property;
+		else if (naming === "increment") implicitAnimation._hyperName = property;
+		else if (ink === "absolute" && naming !== "none") implicitAnimation._hyperName = property;
 		
 		return implicitAnimation;
 	}
@@ -6009,13 +6065,19 @@ function hypermatic(dict, key) {
 	if (animation instanceof TimedItem) {
 		var player = this.hyperPlayer();
 		player._addAnimation(animation,key);
-		//return animation; // Do not return an animation
+		return animation;
 	}
+	
+	
 }
 window.Element.prototype.hypermatic = hypermatic;
+window.Element.prototype.animateStyle = hypermatic;
 window.Element.prototype.hyperAnimate = hypermatic;
 window.Element.prototype.hyperStyle = hypermatic;
 window.Element.prototype.hyperAnimateStyle = hypermatic;
+
+
+
 
 window.Element.prototype.hyperPlayer = function() {
 	var player = this._hyperPlayer;
@@ -6026,7 +6088,7 @@ window.Element.prototype.hyperPlayer = function() {
 	return player;
 }
 	
-
+	
 window.Element.prototype.hyperDefaultAnimations = function() {
 	var animations = this._hyperDefaultAnimations;
 	if (!animations) return {};
@@ -6049,7 +6111,6 @@ window.Element.prototype.setHyperAnimationDelegate = function(delegate) {
 		console.warn("must implement hyperAnimationForKey");
 	}
 }
-/*
 window.Element.prototype.hyperAnimator = function() {
 	return this._hyperAnimator;
 }
@@ -6061,7 +6122,7 @@ window.Element.prototype.setHyperAnimator = function(animator) {
 		console.warn("must implement hyperAnimationForKey");
 	}
 }
-*/
+
 var hyperAnimations = function() {
 	return this.hyperPlayer()._animations.slice(0);
 }	
@@ -6072,6 +6133,7 @@ var hyperStateAnimations = function() {
 	return this.hyperPlayer()._animations.slice(0);
 };
 
+
 window.Element.prototype.hyperAnimations = hyperAnimations;
 window.Element.prototype.hyperStyleAnimations = hyperAnimations;
 
@@ -6080,25 +6142,21 @@ window.Element.prototype.removeAllHyperAnimations = function() {
 }
 
 var hyperAnimationNamed = function(key) {
-	var animation = this.hyperPlayer()._animationNamed(key);
-	if (animation) return kxdxAnimationFromDescription(animation.settings);
-	return null;
+	return this.hyperPlayer()._animationNamed(key);
 }
 window.Element.prototype.hyperAnimationNamed = hyperAnimationNamed;
 
-window.Element.prototype.hyperRemoveAnimationNamed = function(key) {
+window.Element.prototype.hyperRemoveAnimationNamed =	function(key) {
 	return this.hyperPlayer()._removeAnimationNamed(key);
 }
-//window.Element.prototype.hyperGetAnimationById = hyperAnimationNamed;
+window.Element.prototype.hyperGetAnimationById = hyperAnimationNamed;
 
+// TODO: reconsider what classes are public.
+//		Even if you don't create them, you might want to check instanceof
 window.HyperAnimation = HyperAnimation;
 window.HyperAnimationGroup = HyperAnimationGroup;
 window.HyperAnimationChain = HyperAnimationChain;
 
-window.HyperMotionPathEffect = HyperMotionPathEffect;
-
-
-/*
 //window.Animation = HyperAnimation;
 //window.AnimationEffect = AnimationEffect;
 //window.KeyframeEffect = KeyframeEffect;
@@ -6106,6 +6164,7 @@ window.HyperMotionPathEffect = HyperMotionPathEffect;
 //window.MediaReference = MediaReference;
 //window.ParGroup = ParGroup;
 
+window.HyperMotionPathEffect = HyperMotionPathEffect;
 
 window.Player = Player;
 window.PseudoElementReference = PseudoElementReference;
@@ -6117,7 +6176,23 @@ window.Timing = Timing;
 window.Timeline = Timeline;
 window.TimingEvent = TimingEvent;
 window.TimingGroup = TimingGroup;
-*/
+
+window._WebAnimationsTestingUtilities = {
+	_PRIVATE: PRIVATE,
+	_positionListType: positionListType,
+	_hsl2rgb: hsl2rgb,
+	_types: propertyTypes,
+	_knownPlayers: document.timeline._statePlayers.concat(document.timeline._stylePlayers),
+	_pacedTimingFunction: PacedTimingFunction
+};
+
+
+
+
+
+
+
+
 
 var mixin = { // return value is combination Hypermatic namespace and React mixin
 	// React methods are exposed on Hypermatic
@@ -6125,10 +6200,6 @@ var mixin = { // return value is combination Hypermatic namespace and React mixi
 	// undefined behavior if you use one meant for the other.
 	// TODO: figure out better solution or at least document which belongs to what
 	// TODO: also clean up lots of unused functions, here and on Element.
-	// TODO: everything prefixed hyper
-	
-	flush: transact,
-	
 	componentWillMount: function() {
 		this._hyperAnimationProperties(); // create hyperAnimationProperties object now because it calls setState, which cannot happen during render
 	},
@@ -6211,8 +6282,7 @@ var mixin = { // return value is combination Hypermatic namespace and React mixi
 				var presentation = this.state[key];
 				if (!presentation && presentation !== 0) presentation = previous;
 				var typeObject = getType(key,newState[key]);
-				//var rawValue = typeObject.fromCssValue(newState[key]);
-				var rawValue = fromCssValue(key,newState[key]);
+				var rawValue = typeObject.fromCssValue(newState[key]);
 				var animation = kxdxImplicitAnimation(key,this,newState[key],previous,presentation,zero);
 				if (animation) {
 					this._hyperAnimationProperties().baseValues[key] = rawValue; // baseValue does not get set if you explicitly animate.
@@ -6243,14 +6313,18 @@ var mixin = { // return value is combination Hypermatic namespace and React mixi
 	hyperAnimationNamed : function(key) {
 		return hyperAnimationNamed.apply(this,arguments);
 	},
-	hyperDefaultAnimations : function() {
+	hyperGetAnimationById : function(key) {
+		return hyperAnimationNamed.apply(this,arguments);
+	},
+	
+	defaultAnimations : function() {
 		var animations = this.state.hyperDefaultAnimations;
 		if (!animations) {
 			animations = {};
 		}
 		return defaultAnimations;
 	},
-	setHyperDefaultAnimations : function(animations) {
+	setDefaultAnimations : function(animations) {
 		this.setState({ hyperDefaultAnimations : animations });
 	},
 }
